@@ -1,0 +1,7 @@
+langgraph 
+langchain[openai]
+langchain-community 
+langchain-text-splitters
+pypdf
+boto3
+unstructured
