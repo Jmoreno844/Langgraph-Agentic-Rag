@@ -8,10 +8,10 @@ from src.nodes.generate_answer_or_rag import generate_answer_or_rag
 from src.nodes.generate_answer import generate_answer
 from src.nodes.rewrite_question import rewrite_question
 from src.tools.retriever import retriever_tool
-
+from src.state import CustomMessagesState
 
 retriever = ToolNode([retriever_tool])
-graph = StateGraph(MessagesState)
+graph = StateGraph(CustomMessagesState)
 
 graph.add_node(generate_answer_or_rag)
 graph.add_node(generate_answer)
@@ -37,7 +37,7 @@ graph.add_conditional_edges(
         "generate_answer": "generate_answer",
     },
 )
-graph.add_edge("rewrite_question", "generate_answer")
+graph.add_edge("rewrite_question", "generate_answer_or_rag")
 graph.add_edge("generate_answer", END)
 
 app = graph.compile()
@@ -49,7 +49,8 @@ for chunk in app.stream(
                 "role": "user",
                 "content": "What is the privacy policy of Aetherix Dynamics?",
             }
-        ]
+        ],
+        "has_been_rewritten": False,
     }
 ):
     for node, update in chunk.items():

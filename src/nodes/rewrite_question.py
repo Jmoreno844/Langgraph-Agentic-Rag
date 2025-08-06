@@ -1,6 +1,8 @@
 from langgraph.graph import MessagesState
 from langchain.chat_models import init_chat_model
+from langchain_core.messages import HumanMessage
 from dotenv import load_dotenv
+from src.state import CustomMessagesState
 
 load_dotenv()
 
@@ -16,10 +18,10 @@ REWRITE_PROMPT = (
 )
 
 
-def rewrite_question(state: MessagesState):
+def rewrite_question(state: CustomMessagesState) -> CustomMessagesState:
     """Rewrite the original user question."""
     messages = state["messages"]
     question = messages[0].content
     prompt = REWRITE_PROMPT.format(question=question)
-    response = response_model.invoke([{"role": "user", "content": prompt}])
-    return {"messages": [{"role": "user", "content": response.content}]}
+    response = response_model.invoke([HumanMessage(content=prompt)])
+    return {"messages": [response], "has_been_rewritten": True}
