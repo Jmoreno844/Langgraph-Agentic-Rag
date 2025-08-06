@@ -13,12 +13,11 @@ def create_in_memory_retriever_tool():
     if not docs:
         raise ValueError("No documents loaded from S3.")
 
-    vs = InMemoryVectorStore.from_documents(
+    vectorStore = InMemoryVectorStore.from_documents(
         documents=docs, embedding=OpenAIEmbeddings()
     )
-    retriever = vs.as_retriever()
-
-    return create_retriever_tool(
+    retriever = vectorStore.as_retriever()
+    retriever_tool = create_retriever_tool(
         retriever,
         "retrieve_rag_docs",
         description=(
@@ -26,6 +25,7 @@ def create_in_memory_retriever_tool():
             "documentation and return the most relevant snippets."
         ),
     )
+    return retriever_tool
 
 
 __all__ = ["create_in_memory_retriever_tool"]

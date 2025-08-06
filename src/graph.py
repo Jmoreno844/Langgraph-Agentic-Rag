@@ -1,26 +1,25 @@
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph import MessagesState
-from langgraph.prebuilt import tools_condition
+from langgraph.prebuilt import tools_condition, ToolNode
 
-from src.nodes import document_grader
-from src.nodes import execute_tools
-from src.nodes import generate_answer_or_rag
-from src.nodes import generate_answer
-from src.nodes import rewrite_question
-from src.vectorstores.in_memory import create_in_memory_retriever_tool
+from src.routing.document_grader import document_grader
 
-retriever = create_in_memory_retriever_tool()
+from src.nodes.generate_answer_or_rag import generate_answer_or_rag
+from src.nodes.generate_answer import generate_answer
+from src.nodes.rewrite_question import rewrite_question
+from src.tools.retriever import retriever_tool
 
+
+retriever = ToolNode([retriever_tool])
 graph = StateGraph(MessagesState)
 
-graph.add_node(document_grader)
 graph.add_node(generate_answer_or_rag)
 graph.add_node(generate_answer)
 graph.add_node(rewrite_question)
 graph.add_node("retriever", retriever)
 
 graph.add_edge(START, "generate_answer_or_rag")
-graph.add_conditionaledge(
+graph.add_conditional_edges(
     "generate_answer_or_rag",
     # Assess LLM decision (call `retriever_tool` tool or respond to the user)
     tools_condition,
@@ -30,10 +29,9 @@ graph.add_conditionaledge(
         END: END,
     },
 )
-graph.add_edge("retriever", "grade_documents")
 graph.add_conditional_edges(
-    "grade_documents",
-    tools_condition,
+    "retriever",
+    document_grader,
     {
         "rewrite_question": "rewrite_question",
         "generate_answer": "generate_answer",
@@ -44,7 +42,7 @@ graph.add_edge("generate_answer", END)
 
 app = graph.compile()
 
-app.invoke(
+for chunk in app.stream(
     {
         "messages": [
             {
@@ -53,4 +51,8 @@ app.invoke(
             }
         ]
     }
-)
+):
+    for node, update in chunk.items():
+        print("Update from node", node)
+        update["messages"][-1].pretty_print()
+        print("\n\n")

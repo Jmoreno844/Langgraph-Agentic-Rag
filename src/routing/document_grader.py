@@ -2,6 +2,9 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from langgraph.graph import MessagesState
 from langchain.chat_models import init_chat_model
+from dotenv import load_dotenv
+
+load_dotenv()
 
 GRADE_PROMPT = (
     "You are a grader assessing relevance of a retrieved document to a user question. \n "
@@ -23,7 +26,7 @@ class GradeDocuments(BaseModel):
 grader_model = init_chat_model("openai:gpt-4.1", temperature=0)
 
 
-def grade_documents(
+def document_grader(
     state: MessagesState,
 ) -> Literal["generate_answer", "rewrite_question"]:
     """Determine whether the retrieved documents are relevant to the question."""
