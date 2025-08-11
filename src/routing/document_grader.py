@@ -34,8 +34,10 @@ def document_grader(
         return "generate_answer"
     else:
         """Determine whether the retrieved documents are relevant to the question."""
-        question = state["messages"][0].content
+        question = state["messages"][-3].content
+        print("Question: " + question)
         context = state["messages"][-1].content
+        print("Context: " + context)
 
         prompt = GRADE_PROMPT.format(question=question, context=context)
         response = grader_model.with_structured_output(GradeDocuments).invoke(

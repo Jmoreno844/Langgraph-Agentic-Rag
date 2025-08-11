@@ -17,10 +17,12 @@ def generate_answer_or_rag(state: CustomMessagesState) -> CustomMessagesState:
     the question, it will decide to retrieve using the retriever tool, or simply respond to the user.
     """
     prompt = "You are a helpful assistant that can answer questions and retrieve information from a knowledge base."
-    if state["has_been_rewritten"]:
+    if "has_been_rewritten" in state and state["has_been_rewritten"]:
         response = response_model.bind_tools([retriever_tool]).invoke(state["messages"])
+        has_been_rewritten = state["has_been_rewritten"]
     else:
         response = response_model.bind_tools([retriever_tool]).invoke(
             [SystemMessage(content=prompt)] + state["messages"]
         )
-    return {"messages": [response]}
+        has_been_rewritten = False
+    return {"messages": [response], "has_been_rewritten": has_been_rewritten}

@@ -41,19 +41,3 @@ graph.add_edge("rewrite_question", "generate_answer_or_rag")
 graph.add_edge("generate_answer", END)
 
 app = graph.compile()
-
-for chunk in app.stream(
-    {
-        "messages": [
-            {
-                "role": "user",
-                "content": "What is the privacy policy of Aetherix Dynamics?",
-            }
-        ],
-        "has_been_rewritten": False,
-    }
-):
-    for node, update in chunk.items():
-        print("Update from node", node)
-        update["messages"][-1].pretty_print()
-        print("\n\n")

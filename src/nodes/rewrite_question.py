@@ -21,7 +21,7 @@ REWRITE_PROMPT = (
 def rewrite_question(state: CustomMessagesState) -> CustomMessagesState:
     """Rewrite the original user question."""
     messages = state["messages"]
-    question = messages[0].content
+    question = messages[-2].content
     prompt = REWRITE_PROMPT.format(question=question)
     response = response_model.invoke([HumanMessage(content=prompt)])
     return {"messages": [response], "has_been_rewritten": True}
