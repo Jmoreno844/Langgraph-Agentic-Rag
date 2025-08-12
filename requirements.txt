@@ -2,6 +2,11 @@ langgraph
 langchain[openai]
 langchain-community 
 langchain-text-splitters
+langgraph-checkpoint-postgres
 pypdf
 boto3
 unstructured
+
+fastapi[standard]
+psycopg[binary,pool]
+

@@ -3,7 +3,7 @@ from typing import Literal
 from langgraph.graph import MessagesState
 from langchain.chat_models import init_chat_model
 from dotenv import load_dotenv
-from src.state import CustomMessagesState
+from src.graph.state import CustomMessagesState
 
 load_dotenv()
 

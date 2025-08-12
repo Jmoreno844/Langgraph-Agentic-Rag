@@ -2,13 +2,13 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph import MessagesState
 from langgraph.prebuilt import tools_condition, ToolNode
 
-from src.routing.document_grader import document_grader
+from src.graph.routing.document_grader import document_grader
 
-from src.nodes.generate_answer_or_rag import generate_answer_or_rag
-from src.nodes.generate_answer import generate_answer
-from src.nodes.rewrite_question import rewrite_question
-from src.tools.retriever import retriever_tool
-from src.state import CustomMessagesState
+from src.graph.nodes.generate_answer_or_rag import generate_answer_or_rag
+from src.graph.nodes.generate_answer import generate_answer
+from src.graph.nodes.rewrite_question import rewrite_question
+from src.graph.tools.retriever import retriever_tool
+from src.graph.state import CustomMessagesState
 
 retriever = ToolNode([retriever_tool])
 graph = StateGraph(CustomMessagesState)

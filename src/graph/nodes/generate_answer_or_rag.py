@@ -1,10 +1,10 @@
 from langgraph.graph import MessagesState
 from langchain_core.messages import SystemMessage
 from langchain.chat_models import init_chat_model
-from src.tools.retriever import retriever_tool
+from src.graph.tools.retriever import retriever_tool
 from dotenv import load_dotenv
 
-from src.state import CustomMessagesState
+from src.graph.state import CustomMessagesState
 
 load_dotenv()
 

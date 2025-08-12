@@ -1,6 +1,6 @@
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
-from src.ingestion.loader_splitter import load_s3_documents
+from src.graph.ingestion.loader_splitter import load_s3_documents
 from langchain.tools.retriever import create_retriever_tool
 
 
