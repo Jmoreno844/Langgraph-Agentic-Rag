@@ -36,7 +36,11 @@ async def chat(body: ChatRequest):
     config = {"configurable": {"thread_id": body.session_id}}
 
     def gen():
+        # initial comment to establish SSE
+        yield "event: start\n\n"
         for chunk in app.state.graph_app.stream(payload, config=config):
-            yield (str(chunk) + "\n")
+            yield f"data: {str(chunk)}\n\n"
+        # explicit end event
+        yield "event: end\n\n"
 
     return StreamingResponse(gen(), media_type="text/event-stream")

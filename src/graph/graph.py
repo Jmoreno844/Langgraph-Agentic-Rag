@@ -15,7 +15,7 @@ graph = StateGraph(CustomMessagesState)
 
 graph.add_node(generate_answer_or_rag)
 graph.add_node(generate_answer)
-graph.add_node(rewrite_question)
+# graph.add_node(rewrite_question)
 graph.add_node("retriever", retriever)
 
 graph.add_edge(START, "generate_answer_or_rag")
@@ -29,15 +29,7 @@ graph.add_conditional_edges(
         END: END,
     },
 )
-graph.add_conditional_edges(
-    "retriever",
-    document_grader,
-    {
-        "rewrite_question": "rewrite_question",
-        "generate_answer": "generate_answer",
-    },
-)
-graph.add_edge("rewrite_question", "generate_answer_or_rag")
+graph.add_edge("retriever", "generate_answer")
 graph.add_edge("generate_answer", END)
 
-app = graph.compile()
+# Removed eager compile here; the graph will be compiled with a checkpointer in `src/graph/runtime.py`

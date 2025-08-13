@@ -1,7 +1,11 @@
 from langgraph.graph import MessagesState
 from langchain.chat_models import init_chat_model
 
-response_model = init_chat_model("openai:gpt-4.1", temperature=0)
+response_model = init_chat_model(
+    "openai:gpt-4o-mini",
+    streaming=True,
+    temperature=0,
+)
 
 GENERATE_PROMPT = (
     "You are an assistant for question-answering tasks. "

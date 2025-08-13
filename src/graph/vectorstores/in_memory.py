@@ -2,6 +2,9 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
 from src.graph.ingestion.loader_splitter import load_s3_documents
 from langchain.tools.retriever import create_retriever_tool
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain_voyageai import VoyageAIRerank
+from src.settings import settings
 
 
 def create_in_memory_retriever_tool():
@@ -16,7 +19,15 @@ def create_in_memory_retriever_tool():
     vectorStore = InMemoryVectorStore.from_documents(
         documents=docs, embedding=OpenAIEmbeddings()
     )
-    retriever = vectorStore.as_retriever()
+
+    base_retriever = vectorStore.as_retriever(search_kwargs={"k": 5})
+    compressor = VoyageAIRerank(
+        model="rerank-lite-1", voyageai_api_key=settings.VOYAGE_API_KEY, top_k=3
+    )
+    retriever = ContextualCompressionRetriever(
+        base_compressor=compressor, base_retriever=base_retriever
+    )
+
     retriever_tool = create_retriever_tool(
         retriever,
         "retrieve_rag_docs",
@@ -25,7 +36,7 @@ def create_in_memory_retriever_tool():
             "documentation and return the most relevant snippets."
         ),
     )
-    return retriever_tool
+    return retriever_tool, retriever
 
 
 __all__ = ["create_in_memory_retriever_tool"]

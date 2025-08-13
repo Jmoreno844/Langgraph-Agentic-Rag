@@ -9,7 +9,11 @@ from src.graph.state import CustomMessagesState
 load_dotenv()
 
 # Initialize the chat model and retriever tool
-response_model = init_chat_model("openai:gpt-4.1", temperature=0)
+response_model = init_chat_model(
+    "openai:gpt-4o-mini",
+    temperature=0,
+    streaming=True,
+)
 
 
 def generate_answer_or_rag(state: CustomMessagesState) -> CustomMessagesState:
