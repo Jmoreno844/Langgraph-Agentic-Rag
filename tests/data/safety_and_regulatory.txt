@@ -1,0 +1,24 @@
+---
+title: Safety and Regulatory Guidance
+doc_type: safety
+version: 1.0
+effective_date: 2025-08-19
+product: GeoDrone Pro
+audience: End Users, Support Agents
+tags: [safety, regulatory]
+---
+
+Flight Safety
+- Always maintain visual line of sight; avoid flying over people.
+- Check local weather; do not fly in rain or high winds beyond spec.
+- Set RTH altitude above tallest nearby obstacle; verify Home Point.
+
+Battery Safety
+- Inspect for swelling or damage; discontinue use if observed.
+- Store at 40–60% charge if unused for >10 days.
+- Do not leave charging batteries unattended.
+
+Regulatory
+- Comply with local aviation rules (e.g., FAA Part 107 in the U.S.).
+- Respect geofencing and no-fly zones as indicated in the app.
+- Obtain permissions for restricted airspace; keep logs for audits. 

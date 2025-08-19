@@ -1,20 +1,23 @@
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
-from src.graph.ingestion.loader_splitter import load_s3_documents
+from src.graph.ingestion.local_loader_splitter import load_local_documents
 from langchain.tools.retriever import create_retriever_tool
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_voyageai import VoyageAIRerank
 from src.settings import settings
+from pathlib import Path
 
 
 def create_in_memory_retriever_tool():
     """
     Build and return a LangChain retriever tool using an in-memory vector store
-    over the documents loaded from S3.
+    over the documents loaded from the local tests/data directory.
     """
-    docs = load_s3_documents()
+    project_root = Path(__file__).resolve().parents[3]
+    data_dir = project_root / "tests" / "data"
+    docs = load_local_documents(str(data_dir))
     if not docs:
-        raise ValueError("No documents loaded from S3.")
+        raise ValueError("No documents loaded from local tests/data directory.")
 
     vectorStore = InMemoryVectorStore.from_documents(
         documents=docs, embedding=OpenAIEmbeddings()

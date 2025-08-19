@@ -1,0 +1,39 @@
+---
+title: Error Codes Reference — GeoDrone Pro
+doc_type: reference
+version: 1.0
+effective_date: 2025-08-19
+product: GeoDrone Pro
+audience: End Users, Support Agents
+tags: [errors, diagnostics]
+---
+
+Code E101 — IMU Calibration Required
+- Symptom: Drift, unstable hover.
+- Cause: IMU out of tolerance after transport.
+- Resolution: Settings > Sensors > IMU > Calibrate on level surface.
+
+Code E102 — Compass Interference
+- Symptom: Compass error; RTH disabled.
+- Cause: Magnetic interference (metal surfaces, speakers).
+- Resolution: Move 10+ m away; Settings > Sensors > Compass > Calibrate.
+
+Code E201 — Link Lost
+- Symptom: Controller shows red link icon; failsafe RTH triggers.
+- Cause: RF interference or antenna misalignment.
+- Resolution: Reorient antennas; change band/channel; see troubleshooting_connectivity.txt.
+
+Code E301 — Gimbal Overload
+- Symptom: Shaking video; gimbal error.
+- Cause: Gimbal lock attached or mechanical obstruction.
+- Resolution: Power off; remove lock; ensure free movement; reboot.
+
+Code E401 — SD Card Error
+- Symptom: Cannot record; dropped frames.
+- Cause: Incompatible or slow SD card.
+- Resolution: Use UHS‑I U3 V30 or better; format in camera.
+
+Code E501 — Firmware Mismatch
+- Symptom: Linking fails; features disabled.
+- Cause: Controller/app and aircraft on incompatible versions.
+- Resolution: Update controller app first, then aircraft; verify with firmware_compatibility_matrix.txt. 

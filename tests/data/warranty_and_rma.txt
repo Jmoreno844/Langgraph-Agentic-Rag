@@ -1,0 +1,31 @@
+---
+title: Warranty and RMA Policy
+doc_type: policy
+version: 1.0
+effective_date: 2025-08-19
+product: GeoDrone Pro, Nimbus Mini, Synapse Platform
+audience: End Users, Support Agents
+tags: [warranty, rma, returns]
+---
+
+Warranty Coverage
+- 12-month limited warranty against defects in materials and workmanship.
+- Exclusions: Crash damage, water ingress, unauthorized modifications, cosmetic wear, consumables (props, batteries beyond cycle wear), misuse.
+
+Claim Process
+1. Collect serial numbers (aircraft, controller, battery) and proof of purchase.
+2. Provide logs and photos/video of issue.
+3. Submit case via Support Portal; receive RMA number if approved.
+
+RMA Steps
+- Backup data and remove SD cards and accessories.
+- Ship using original packaging or equivalent protective materials.
+- Include RMA number on the box and in paperwork.
+
+Turnaround & Outcomes
+- Typical evaluation within 5 business days of receipt.
+- Remedies: Repair, replacement, or refund at Aetherix’s discretion.
+
+Out-of-Warranty Service
+- Paid repairs available with estimate approval.
+- Battery health below 70% after 200 cycles is considered normal wear. 

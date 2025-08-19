@@ -1,0 +1,21 @@
+---
+title: Synapse App Release Notes — 2025-08
+doc_type: release_notes
+version: 1.0
+effective_date: 2025-08-15
+product: Synapse Platform
+audience: End Users, Support Agents
+tags: [release, changes, known issues]
+---
+
+New
+- Added offline upload queue with automatic resume.
+- Improved photogrammetry pipeline accuracy for tower inspections (+6% feature matches).
+
+Fixed
+- Resolved occasional crash during bulk media import on Android 14.
+- Corrected altitude units mismatch (ft/m) in export reports.
+
+Known Issues
+- Large uploads (>100 GB) may throttle on certain ISPs; use Ethernet when possible.
+- Rare UI freeze when switching projects during active processing; restart app. 

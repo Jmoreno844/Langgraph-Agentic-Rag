@@ -1,0 +1,20 @@
+---
+title: Firmware Compatibility Matrix
+doc_type: matrix
+version: 1.0
+effective_date: 2025-08-19
+product: GeoDrone Pro, Synapse Platform
+audience: End Users, Support Agents
+tags: [firmware, compatibility]
+---
+
+# Columns: drone_model | aircraft_fw | controller_fw | synapse_app | status | notes
+GeoDrone Pro | v4.2.1 | v3.9.0 | 2.18.0 | supported | Recommended stable combo
+GeoDrone Pro | v4.2.1 | v3.8.5 | 2.17.2 | supported | Minor UI differences
+GeoDrone Pro | v4.1.0 | v3.9.0 | 2.18.0 | supported | Update aircraft for latest features
+GeoDrone Pro | v4.0.5 | v3.7.0 | 2.16.0 | deprecated | Security fixes missing
+GeoDrone Pro | v3.9.9 | v3.6.2 | 2.14.4 | incompatible | Linking failures likely
+
+Notes
+- Update order: Synapse app → Controller FW → Aircraft FW.
+- After updates, re-link aircraft and verify calibration status. 

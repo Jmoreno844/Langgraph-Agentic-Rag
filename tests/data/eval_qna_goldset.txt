@@ -1,0 +1,43 @@
+---
+title: Evaluation Goldset — Support RAG
+doc_type: eval
+version: 1.0
+effective_date: 2025-08-19
+product: GeoDrone Pro, Synapse Platform
+audience: Internal
+tags: [evaluation, qna]
+---
+
+# Format: Q | expected_answer_brief | primary_sources (file:section_hint)
+
+Q: How do I pair the GeoDrone Pro with the controller?
+A: Start linking on controller, press and hold pairing button on aircraft for 3 seconds until beep, wait for “Linking Successful.”
+S: quick_start_geodrone_pro.txt: Pair the Drone and Controller; troubleshooting_connectivity.txt: Re-Linking Procedure
+
+Q: What should I check if the drone keeps disconnecting?
+A: Power and proximity, RF interference, band/channel, antenna orientation, firmware versions, then re-link and export logs.
+S: troubleshooting_connectivity.txt: Steps 1–8; firmware_compatibility_matrix.txt
+
+Q: Which SD cards are recommended?
+A: UHS‑I U3 V30 or better; format in camera.
+S: error_codes E401; product_specs_geodrone_pro.txt
+
+Q: What is covered by the warranty?
+A: 12-month limited warranty; excludes crash/water damage, unauthorized mods, cosmetic wear, consumables beyond normal wear.
+S: warranty_and_rma.txt: Warranty Coverage
+
+Q: How should I order updates to avoid version mismatch?
+A: Synapse app, then Controller FW, then Aircraft FW; re-link after updates.
+S: firmware_compatibility_matrix.txt: Notes; support_faq.txt
+
+Q: Is data encrypted on Synapse?
+A: Yes, encrypted in transit and at rest; access restricted to your account.
+S: support_faq.txt; software_synapse_platform.txt: Overview
+
+Q: Can I fly in light rain with GeoDrone Pro?
+A: No, IP54 is splash resistant only; do not fly in rain.
+S: product_specs_geodrone_pro.txt; safety_and_regulatory.txt
+
+Q: My question: Does Nimbus Mini support LiDAR payloads?
+A: Cannot answer from current corpus.
+S: none 

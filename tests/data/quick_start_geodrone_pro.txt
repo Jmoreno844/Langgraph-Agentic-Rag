@@ -1,0 +1,53 @@
+---
+title: Quick Start Guide — GeoDrone Pro
+doc_type: quick_start
+version: 1.0
+effective_date: 2025-08-19
+product: GeoDrone Pro
+audience: End Users, Support Agents
+tags: [setup, pairing, first flight]
+---
+
+Before You Begin
+- Verify battery levels for drone and controller are at least 50%.
+- Install or update the Synapse app on the controller (see firmware_compatibility_matrix.txt).
+- Choose an open outdoor area, away from RF interference.
+
+Unbox and Charge
+1. Inspect contents: aircraft, controller, batteries, props, charger, cables.
+2. Charge batteries to 100% using the included charger. LEDs turn solid when full.
+
+Pair the Drone and Controller
+1. Power on controller, then the drone.
+2. On controller: Settings > Linking > Start Linking.
+3. On aircraft: Press and hold the pairing button near the SD slot for 3 seconds until beep.
+4. Controller displays “Linking Successful.” If not, see troubleshooting_connectivity.txt.
+
+Pre-Flight Checklist
+- Props installed and secure; no damage.
+- GPS lock achieved (≥12 satellites) and Home Point set.
+- IMU and compass status: Normal.
+- Flight mode: P-Mode; Return-To-Home altitude set above local obstacles.
+
+First Flight
+1. Takeoff: Auto takeoff or manual throttle up to 2 m hover.
+2. Controls: Practice gentle roll/pitch/yaw; keep line of sight.
+3. Landing: Return over flat area; descend slowly; motors auto-stop on touchdown.
+
+Capture Data
+- Photo: Tap shutter; ensure subject is centered and in focus.
+- Video: Start/stop recording; monitor remaining storage on SD.
+- For inspections: Use 2–4x zoom; avoid digital zoom beyond 4x for clarity.
+
+Upload to Synapse
+1. Connect controller to internet (Wi‑Fi/Ethernet).
+2. Synapse > Projects > Upload; select media from SD or internal storage.
+3. Choose processing (photogrammetry, defect detection) and submit.
+
+Troubleshooting Quick Checks
+- No link: Verify battery >50%, reduce distance to 1–3 m, move away from Wi‑Fi routers.
+- Drift: Perform IMU and compass calibration in open area.
+- Shaky video: Check prop balance and gimbal lock removed.
+
+Support
+- If issues persist, collect logs (Settings > Diagnostics > Export Logs) and contact support with serial number. 

@@ -1,0 +1,25 @@
+---
+title: Synapse Platform — Features and Tiers
+doc_type: product
+version: 1.0
+effective_date: 2025-08-19
+product: Synapse Platform
+audience: End Users, Support Agents
+tags: [synapse, features, tiers]
+---
+
+Overview
+The Synapse Platform processes, analyzes, and manages drone data with secure storage and collaboration.
+
+Key Features
+- Automated flight planning and fleet management
+- 2D/3D model generation (photogrammetry)
+- AI-powered detection (livestock counting, crop stress, defect detection)
+- Visualizations: NDVI, thermal maps, elevation models
+- Secure storage and sharing, role-based access control
+- Automated PDF/CSV report generation
+
+Subscription Tiers
+- Basic ($99/month): 1 drone, 50 GB storage, standard processing
+- Pro ($499/month): Up to 5 drones, 500 GB, advanced analytics, collaboration
+- Enterprise (Custom): Unlimited drones/storage, API access, dedicated support, custom models 

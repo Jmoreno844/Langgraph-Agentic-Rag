@@ -1,0 +1,24 @@
+---
+title: Support FAQ
+doc_type: faq
+version: 1.0
+effective_date: 2025-08-19
+product: GeoDrone Pro, Synapse Platform
+audience: End Users, Support Agents
+tags: [faq]
+---
+
+Q: What is the warranty on Aetherix Dynamics drones?
+A: 12-month limited warranty against manufacturing defects. Crash/water damage and modifications are excluded. See warranty_and_rma.txt.
+
+Q: How do I update my GeoDrone Pro's firmware?
+A: Update order: Synapse app → Controller FW → Aircraft FW. Verify versions in firmware_compatibility_matrix.txt. Re-link after updates.
+
+Q: My drone won't connect to the controller. What should I do?
+A: Start with troubleshooting_connectivity.txt; check power, proximity, RF interference, then re-link.
+
+Q: Which SD cards are supported?
+A: Use UHS‑I U3 V30 or better; format in-camera for best performance.
+
+Q: Is my data private on Synapse?
+A: Yes. Data is encrypted in transit and at rest. Access is limited to your account. For audits, export logs and permissions from Settings. 
