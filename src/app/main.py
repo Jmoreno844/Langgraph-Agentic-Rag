@@ -1,9 +1,10 @@
 # src/api/main.py
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 from src.graph.runtime import build_app, cleanup
+from src.app.features.documents.api import router as documents_router
 
 
 class ChatRequest(BaseModel):
@@ -20,6 +21,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(documents_router)
 
 
 @app.get("/")
@@ -27,7 +29,7 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.post("/v1/chat")
+@app.post("/chat")
 async def chat(body: ChatRequest):
     payload = {
         "messages": body.messages[-1:],
@@ -44,3 +46,14 @@ async def chat(body: ChatRequest):
         yield "event: end\n\n"
 
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+class ErrorResponse(Exception):
+    def __init__(self, status_code: int, detail: str):
+        self.status_code = status_code
+        self.detail = detail
+
+
+@app.exception_handler(ErrorResponse)
+async def error_handler(_: Request, exc: ErrorResponse):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
