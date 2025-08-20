@@ -7,9 +7,12 @@ from src.services.s3_service import (
     head_object_from_s3,
     object_exists_in_s3,
     delete_file_from_s3,
+    get_object_bytes_from_s3,
 )
 from src.settings import settings
 from .schemas import Document, DeleteResult
+from src.graph.ingestion.splitter import split_text
+from src.services.vectorstores.pinecone_service import get_pinecone_service
 
 
 def document_from_head(key: str, include_url: bool = False) -> Document:
@@ -29,6 +32,24 @@ def document_from_head(key: str, include_url: bool = False) -> Document:
             else None
         ),
     )
+
+
+def _ingest_key_into_pinecone(key: str, etag: str) -> None:
+    raw_bytes = get_object_bytes_from_s3(settings.AWS_S3_RAG_DOCUMENTS_BUCKET, key)
+    try:
+        text = raw_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        text = raw_bytes.decode("utf-8", errors="ignore")
+    if not text.strip():
+        return
+    docs = split_text(text=text, doc_id=key, etag=etag)
+    service = get_pinecone_service()
+    service.upsert_documents(docs)
+
+
+def _delete_key_from_pinecone(key: str) -> None:
+    service = get_pinecone_service()
+    service.delete_by_doc_id(key)
 
 
 async def list_documents(include_url: bool) -> list[Document]:
@@ -51,6 +72,29 @@ async def list_documents(include_url: bool) -> list[Document]:
         )
         for obj in contents
     ]
+
+
+def get_document_sync_status(key: str) -> tuple[str, int, int, str]:
+    """Return (status, vectors_for_doc_id, vectors_for_doc_id_and_etag, etag)."""
+    head = head_object_from_s3(settings.AWS_S3_RAG_DOCUMENTS_BUCKET, key)
+    etag = head.get("ETag", "").strip('"')
+    service = get_pinecone_service()
+    count_doc, count_both = service.get_vector_counts(key, etag)
+    status = service.get_sync_status(key, etag)
+    return status, count_doc, count_both, etag
+
+
+def list_sync_statuses() -> list[tuple[str, str, int, int]]:
+    """Return list of (key, etag, vectors_for_doc_id, vectors_for_doc_id_and_etag)."""
+    contents = get_s3_bucket_contents(settings.AWS_S3_RAG_DOCUMENTS_BUCKET)
+    service = get_pinecone_service()
+    results: list[tuple[str, str, int, int]] = []
+    for obj in contents:
+        key = obj["Key"]
+        etag = obj.get("ETag", "").strip('"')
+        c_doc, c_both = service.get_vector_counts(key, etag)
+        results.append((key, etag, c_doc, c_both))
+    return results
 
 
 async def upload_document(
@@ -77,7 +121,17 @@ async def upload_document(
         file.file,
         content_type=file.content_type,
     )
-    return document_from_head(resolved_key, include_url=include_url)
+    document = document_from_head(resolved_key, include_url=include_url)
+
+    # Keep Pinecone in sync
+    try:
+        if overwrite:
+            _delete_key_from_pinecone(resolved_key)
+        _ingest_key_into_pinecone(resolved_key, document.etag)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Vectorstore ingest failed: {exc}")
+
+    return document
 
 
 async def update_document(
@@ -99,6 +153,14 @@ async def update_document(
     )
     document = document_from_head(key, include_url=include_url)
     created = not exists
+
+    # Replace vectors for this doc
+    try:
+        _delete_key_from_pinecone(key)
+        _ingest_key_into_pinecone(key, document.etag)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Vectorstore update failed: {exc}")
+
     return document, created
 
 
@@ -107,4 +169,9 @@ def delete_document(key: str) -> DeleteResult:
         raise HTTPException(status_code=404, detail="Object not found")
 
     deleted = delete_file_from_s3(settings.AWS_S3_RAG_DOCUMENTS_BUCKET, key)
+    # Best-effort vectorstore cleanup; do not fail deletion if vectorstore call fails
+    try:
+        _delete_key_from_pinecone(key)
+    except Exception:
+        pass
     return DeleteResult(key=key, deleted=bool(deleted))

@@ -81,3 +81,9 @@ def object_exists_in_s3(bucket_name: str, key: str) -> bool:
         ):
             return False
         raise
+
+
+def get_object_bytes_from_s3(bucket_name: str, key: str) -> bytes:
+    """Download and return the raw bytes of an S3 object."""
+    response = s3_client.get_object(Bucket=bucket_name, Key=key)
+    return response["Body"].read()
