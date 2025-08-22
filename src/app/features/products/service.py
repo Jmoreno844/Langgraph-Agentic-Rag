@@ -3,28 +3,34 @@ from __future__ import annotations
 from typing import List, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
+from sqlalchemy import func
 
-from src.settings import settings
+from src.db.session import get_session
 from .models import Product
 from .schemas import ProductCreate, ProductUpdate, ProductOut, DeleteResult
 
 
-_engine = None
-_SessionLocal = None
-
-
-def _ensure_session_factory() -> None:
-    global _engine, _SessionLocal
-    if _SessionLocal is None:
-        _engine = create_engine(settings.AWS_DB_URL, echo=False, pool_pre_ping=True)
-        _SessionLocal = sessionmaker(bind=_engine, autocommit=False, autoflush=False)
-
-
 def _get_session() -> Session:
-    _ensure_session_factory()
-    return _SessionLocal()
+    return get_session()
+
+
+def list_product_categories() -> List[dict]:
+    """Return a list of available product categories with item counts.
+
+    Each item is a dict: {"category": str, "count": int}
+    """
+    session: Session = _get_session()
+    try:
+        rows = (
+            session.query(Product.category, func.count(Product.id))
+            .group_by(Product.category)
+            .order_by(Product.category.asc())
+            .all()
+        )
+        return [{"category": category, "count": int(count)} for category, count in rows]
+    finally:
+        session.close()
 
 
 def _product_to_out(product: Product) -> ProductOut:

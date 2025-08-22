@@ -1,5 +1,6 @@
 from src.settings import settings
 from src.graph.graph import graph
+from src.db.checkpointer import create_checkpointer_context
 
 # Global compiled app instance
 _compiled_app = None
@@ -11,12 +12,10 @@ def build_app():
 
     if _compiled_app is None:
         try:
-            from langgraph.checkpoint.postgres import PostgresSaver
-
             print(f"🔄 Connecting to database: {settings.AWS_DB_URL[:50]}...")
 
             # Create the context manager but keep it alive
-            _checkpointer_context = PostgresSaver.from_conn_string(settings.AWS_DB_URL)
+            _checkpointer_context = create_checkpointer_context()
             print("🔄 Context manager created, entering context...")
 
             # Enter the context to get the actual checkpointer

@@ -1,19 +1,18 @@
 import os
 import json
 import sys
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # Add the project root to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.features.products.models import Product, Base
-from settings import settings
+from db.session import get_engine
 
 
 def create_session():
     """Create and return a new SQLAlchemy session."""
-    engine = create_engine(settings.AWS_DB_URL, echo=False)
+    engine = get_engine()
     Base.metadata.bind = engine
     DBSession = sessionmaker(bind=engine)
     return DBSession()

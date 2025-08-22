@@ -5,6 +5,8 @@ from src.graph.tools.retriever import retriever_tool
 from dotenv import load_dotenv
 
 from src.graph.state import CustomMessagesState
+from src.graph.tools.query_products import query_products_tool
+from src.graph.tools.list_product_categories import list_product_categories_tool
 
 load_dotenv()
 
@@ -20,13 +22,20 @@ def generate_answer_or_rag(state: CustomMessagesState) -> CustomMessagesState:
     """Call the model to generate a response based on the current state. Given
     the question, it will decide to retrieve using the retriever tool, or simply respond to the user.
     """
-    prompt = "You are a helpful assistant that can answer questions and retrieve information from a knowledge base."
+    prompt = (
+        "You are a helpful assistant that can answer questions and retrieve information from a knowledge base. "
+        "For general availability questions like 'what products do you have', first call the 'list_product_categories' tool "
+        "to provide available categories and ask a follow-up question. When the user specifies filters (category, price, etc.), "
+        "use 'query_products'."
+    )
     if "has_been_rewritten" in state and state["has_been_rewritten"]:
-        response = response_model.bind_tools([retriever_tool]).invoke(state["messages"])
+        response = response_model.bind_tools(
+            [retriever_tool, query_products_tool, list_product_categories_tool]
+        ).invoke(state["messages"])
         has_been_rewritten = state["has_been_rewritten"]
     else:
-        response = response_model.bind_tools([retriever_tool]).invoke(
-            [SystemMessage(content=prompt)] + state["messages"]
-        )
+        response = response_model.bind_tools(
+            [retriever_tool, query_products_tool, list_product_categories_tool]
+        ).invoke([SystemMessage(content=prompt)] + state["messages"])
         has_been_rewritten = False
     return {"messages": [response], "has_been_rewritten": has_been_rewritten}

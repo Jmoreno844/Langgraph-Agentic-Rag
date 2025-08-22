@@ -8,15 +8,17 @@ from src.graph.nodes.generate_answer_or_rag import generate_answer_or_rag
 from src.graph.nodes.generate_answer import generate_answer
 from src.graph.nodes.rewrite_question import rewrite_question
 from src.graph.tools.retriever import retriever_tool
+from src.graph.tools.query_products import query_products_tool
+from src.graph.tools.list_product_categories import list_product_categories_tool
 from src.graph.state import CustomMessagesState
 
-retriever = ToolNode([retriever_tool])
+tools = ToolNode([retriever_tool, query_products_tool, list_product_categories_tool])
 graph = StateGraph(CustomMessagesState)
 
 graph.add_node(generate_answer_or_rag)
 graph.add_node(generate_answer)
 # graph.add_node(rewrite_question)
-graph.add_node("retriever", retriever)
+graph.add_node("tools", tools)
 
 graph.add_edge(START, "generate_answer_or_rag")
 graph.add_conditional_edges(
@@ -25,11 +27,9 @@ graph.add_conditional_edges(
     tools_condition,
     {
         # Translate the condition outputs to nodes in our graph
-        "tools": "retriever",
+        "tools": "tools",
         END: END,
     },
 )
-graph.add_edge("retriever", "generate_answer")
+graph.add_edge("tools", "generate_answer")
 graph.add_edge("generate_answer", END)
-
-# Removed eager compile here; the graph will be compiled with a checkpointer in `src/graph/runtime.py`
