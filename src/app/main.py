@@ -5,6 +5,7 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 from src.graph.runtime import build_app, cleanup
 from src.app.features.documents.api import router as documents_router
+from src.app.features.products.api import router as products_router
 
 
 class ChatRequest(BaseModel):
@@ -22,6 +23,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(documents_router)
+app.include_router(products_router)
 
 
 @app.get("/")

@@ -6,6 +6,7 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain_voyageai import VoyageAIRerank
 from src.settings import settings
 from pathlib import Path
+import os
 
 
 def create_in_memory_retriever_tool():
@@ -24,12 +25,17 @@ def create_in_memory_retriever_tool():
     )
 
     base_retriever = vectorStore.as_retriever(search_kwargs={"k": 5})
-    compressor = VoyageAIRerank(
-        model="rerank-lite-1", voyageai_api_key=settings.VOYAGE_API_KEY, top_k=3
-    )
-    retriever = ContextualCompressionRetriever(
-        base_compressor=compressor, base_retriever=base_retriever
-    )
+
+    use_compression = os.getenv("RAG_USE_COMPRESSION", "true").lower() == "true"
+    if use_compression:
+        compressor = VoyageAIRerank(
+            model="rerank-lite-1", voyageai_api_key=settings.VOYAGE_API_KEY, top_k=3
+        )
+        retriever = ContextualCompressionRetriever(
+            base_compressor=compressor, base_retriever=base_retriever
+        )
+    else:
+        retriever = base_retriever
 
     retriever_tool = create_retriever_tool(
         retriever,

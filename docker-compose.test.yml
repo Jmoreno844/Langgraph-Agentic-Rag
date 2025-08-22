@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      target: test
+    env_file:
+      - .env
+    command: ["pytest", "-q"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

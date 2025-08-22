@@ -1,21 +1,21 @@
 ---
-title: Synapse App Release Notes — 2025-08
+title: TechForge Site Release Notes — 2025-08
 doc_type: release_notes
 version: 1.0
 effective_date: 2025-08-15
-product: Synapse Platform
+product: TechForge Web
 audience: End Users, Support Agents
 tags: [release, changes, known issues]
 ---
 
 New
-- Added offline upload queue with automatic resume.
-- Improved photogrammetry pipeline accuracy for tower inspections (+6% feature matches).
+- Added PC build configurator with live compatibility checks.
+- Introduced order status tracking and RMA submission workflow.
 
 Fixed
-- Resolved occasional crash during bulk media import on Android 14.
-- Corrected altitude units mismatch (ft/m) in export reports.
+- Resolved checkout address validation failures in some EU regions.
+- Corrected PSU wattage recommendations for high-end GPUs.
 
 Known Issues
-- Large uploads (>100 GB) may throttle on certain ISPs; use Ethernet when possible.
-- Rare UI freeze when switching projects during active processing; restart app. 
+- Rare cart sync delay across multiple devices; refresh to update.
+- Occasional image caching issue on product pages; hard refresh resolves. 

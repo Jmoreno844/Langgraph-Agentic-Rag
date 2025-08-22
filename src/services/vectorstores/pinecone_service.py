@@ -17,7 +17,7 @@ class PineconeVectorStoreService:
     """
 
     def __init__(self):
-        self._embedding = PineconeEmbeddings()
+        self._embedding = PineconeEmbeddings(model=settings.PINECONE_EMBEDDINGS_MODEL)
         self._vectorstore = PineconeVectorStore(
             index_name=settings.PINECONE_INDEX,
             embedding=self._embedding,
@@ -56,32 +56,122 @@ class PineconeVectorStoreService:
 
     def delete_by_doc_id(self, doc_id: str, *, namespace: Optional[str] = None):
         """Delete all vectors whose metadata matches the provided doc_id."""
-        self._vectorstore.delete(filter={"doc_id": doc_id}, namespace=namespace)
+        self._vectorstore.delete(
+            filter={"doc_id": {"$eq": doc_id}}, namespace=namespace
+        )
+
+    def _extract_count(self, stats: dict) -> int:
+        """Extract a vector count from describe_index_stats response.
+
+        Falls back to summing per-namespace counts if total_vector_count is absent.
+        """
+        total = stats.get("total_vector_count")
+        if isinstance(total, int):
+            return int(total)
+        namespaces = stats.get("namespaces") or {}
+        try:
+            return sum(int(ns.get("vector_count", 0)) for ns in namespaces.values())
+        except Exception:
+            return 0
+
+    def _count_via_list(self, index, *, doc_id: str, etag: Optional[str]) -> int:
+        """Fallback counter using list() + fetch() + client-side metadata filtering.
+
+        Works for Serverless/Starter indexes that do not support metadata filters
+        in describe_index_stats.
+        """
+        try:
+            # Default namespace in serverless stats shows as empty string
+            ids = []
+            for vec in index.list(namespace=""):
+                vid = vec.get("id") if isinstance(vec, dict) else vec
+                if isinstance(vid, str):
+                    ids.append(vid)
+            count = 0
+            for i in range(0, len(ids), 100):
+                batch = ids[i : i + 100]
+                resp = index.fetch(ids=batch, namespace="")
+                vectors = resp.get("vectors", {}) if isinstance(resp, dict) else {}
+                for v in vectors.values():
+                    meta = v.get("metadata") if isinstance(v, dict) else None
+                    if not isinstance(meta, dict):
+                        continue
+                    if meta.get("doc_id") != doc_id:
+                        continue
+                    if etag is not None and meta.get("etag") != etag:
+                        continue
+                    count += 1
+            return count
+        except Exception:
+            return 0
+
+    def _count_via_query(self, index, *, doc_id: str, etag: Optional[str]) -> int:
+        """Fallback counter using a zero-vector query with metadata filter.
+
+        top_k is capped (commonly 1000), so counts above that will be truncated.
+        """
+        try:
+            stats = index.describe_index_stats()
+            dim = int(stats.get("dimension") or 0)
+            if dim <= 0:
+                return 0
+            zero = [0.0] * dim
+            flt = {"doc_id": {"$eq": doc_id}}
+            if etag is not None:
+                flt["etag"] = {"$eq": etag}
+            res = index.query(
+                vector=zero, top_k=1000, include_metadata=True, filter=flt
+            )
+            matches = res.get("matches") if isinstance(res, dict) else None
+            if isinstance(matches, list):
+                return len(matches)
+            return 0
+        except Exception:
+            return 0
 
     def get_vector_counts(
         self, doc_id: str, etag: Optional[str] = None
     ) -> Tuple[int, int]:
         """Return (count_for_doc_id, count_for_doc_id_and_etag) using describe_index_stats.
 
+        Falls back to list() or zero-vector query when serverless/starter indexes do not support
+        metadata filters in describe_index_stats.
+
         If any error occurs, returns (0, 0).
         """
         try:
             # Lazy import to avoid hard dependency at module import time
             from pinecone import Pinecone
+            from pinecone.exceptions.exceptions import PineconeApiException
 
             pc = Pinecone(api_key=settings.PINECONE_API_KEY)
             index = pc.Index(settings.PINECONE_INDEX)
 
-            stats_doc = index.describe_index_stats(filter={"doc_id": doc_id})
-            count_doc = int(stats_doc.get("total_vector_count", 0))
+            # Try metadata-filtered stats (Enterprise)
+            try:
+                stats_doc = index.describe_index_stats(
+                    filter={"doc_id": {"$eq": doc_id}}
+                )
+                count_doc = self._extract_count(stats_doc)
+            except PineconeApiException:
+                # Serverless/Starter doesn't support filtered stats; fallback
+                count_doc = self._count_via_list(index, doc_id=doc_id, etag=None)
+                if count_doc == 0:
+                    count_doc = self._count_via_query(index, doc_id=doc_id, etag=None)
 
             if etag is None:
                 return count_doc, 0
 
-            stats_both = index.describe_index_stats(
-                filter={"doc_id": doc_id, "etag": etag}
-            )
-            count_both = int(stats_both.get("total_vector_count", 0))
+            try:
+                stats_both = index.describe_index_stats(
+                    filter={"doc_id": {"$eq": doc_id}, "etag": {"$eq": etag}}
+                )
+                count_both = self._extract_count(stats_both)
+            except PineconeApiException:
+                count_both = self._count_via_list(index, doc_id=doc_id, etag=etag)
+                if count_both == 0:
+                    count_both = self._count_via_query(index, doc_id=doc_id, etag=etag)
+
             return count_doc, count_both
         except Exception:
             return 0, 0

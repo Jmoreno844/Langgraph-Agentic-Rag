@@ -1,25 +1,24 @@
 ---
-title: Synapse Platform — Features and Tiers
-doc_type: product
+title: PC Assembly & Services — Features and Tiers
+doc_type: service
 version: 1.0
 effective_date: 2025-08-19
-product: Synapse Platform
+product: Services
 audience: End Users, Support Agents
-tags: [synapse, features, tiers]
+tags: [services, assembly, tiers]
 ---
 
 Overview
-The Synapse Platform processes, analyzes, and manages drone data with secure storage and collaboration.
+We offer professional PC assembly, cable management, BIOS updates, and optional OS installation and testing.
 
 Key Features
-- Automated flight planning and fleet management
-- 2D/3D model generation (photogrammetry)
-- AI-powered detection (livestock counting, crop stress, defect detection)
-- Visualizations: NDVI, thermal maps, elevation models
-- Secure storage and sharing, role-based access control
-- Automated PDF/CSV report generation
+- Compatibility check against vendor QVLs and our matrix
+- BIOS update and optimal defaults (XMP/EXPO when applicable)
+- Cable management and airflow optimization
+- Stress testing (CPU/GPU/memory) and thermals verification
+- Optional OS install and driver package
 
-Subscription Tiers
-- Basic ($99/month): 1 drone, 50 GB storage, standard processing
-- Pro ($499/month): Up to 5 drones, 500 GB, advanced analytics, collaboration
-- Enterprise (Custom): Unlimited drones/storage, API access, dedicated support, custom models 
+Service Tiers
+- Assembly Only ($99): Hardware assembly, POST verification
+- Assembly + OS ($149): Assembly plus Windows install and drivers
+- Creator/Workstation (Custom): App validation, color calibration, bespoke profiles 

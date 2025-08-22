@@ -1,0 +1,33 @@
+---
+title: TechForge Components — Company Overview
+doc_type: company
+version: 1.0
+effective_date: 2025-08-19
+audience: End Users, Support Agents
+tags: [company, overview]
+---
+
+Mission
+- TechForge Components is a retailer of PC parts, peripherals, and build services for enthusiasts, creators, and businesses.
+
+Products
+- CPUs, GPUs, Motherboards, Memory, Storage, PSUs, Cases, Cooling, Peripherals.
+
+Services
+- Compatibility guidance, order support, RMAs, and optional assembly services.
+
+Markets
+- DIY builders, gamers, content creators, small businesses, and system integrators.
+
+Support
+- Hours: Mon–Fri 09:00–18:00 (UTC)
+- Channels: See support_channels.txt
+- SLAs: See service_levels.txt
+
+Policies
+- Returns & warranty: See warranty_and_rma.txt
+- Privacy & security: See security_privacy_overview.txt
+
+Links
+- Product list: product_list.txt
+- Support index: support_index.txt 

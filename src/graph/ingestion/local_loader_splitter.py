@@ -21,9 +21,10 @@ def load_local_documents(directory_path: str):
     else:
         docs_list.append(docs)
 
-    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=100, chunk_overlap=50
-    )
+    # Use the shared splitter to keep chunking consistent (500 size, 100 overlap)
+    from src.graph.ingestion.splitter import get_text_splitter
+
+    text_splitter = get_text_splitter()
     doc_splits = text_splitter.split_documents(docs_list)
     return doc_splits
 

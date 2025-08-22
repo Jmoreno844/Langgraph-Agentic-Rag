@@ -1,4 +1,3 @@
-from langgraph.checkpoint.postgres import PostgresSaver
 from src.settings import settings
 from src.graph.graph import graph
 
@@ -12,6 +11,8 @@ def build_app():
 
     if _compiled_app is None:
         try:
+            from langgraph.checkpoint.postgres import PostgresSaver
+
             print(f"🔄 Connecting to database: {settings.AWS_DB_URL[:50]}...")
 
             # Create the context manager but keep it alive

@@ -1,43 +1,35 @@
 ---
-title: Evaluation Goldset — Support RAG
+title: Evaluation Goldset — PC Store Support RAG
 doc_type: eval
 version: 1.0
 effective_date: 2025-08-19
-product: GeoDrone Pro, Synapse Platform
+product: PC Components
 audience: Internal
 tags: [evaluation, qna]
 ---
 
 # Format: Q | expected_answer_brief | primary_sources (file:section_hint)
 
-Q: How do I pair the GeoDrone Pro with the controller?
-A: Start linking on controller, press and hold pairing button on aircraft for 3 seconds until beep, wait for “Linking Successful.”
-S: quick_start_geodrone_pro.txt: Pair the Drone and Controller; troubleshooting_connectivity.txt: Re-Linking Procedure
+Q: Will an Intel Core i9-14900K work with the ASUS ROG Maximus Z790 Hero and DDR5-6000?
+A: Yes; update BIOS, use DDR5-6000 XMP profile on Z790; 1202+ BIOS recommended.
+S: firmware_compatibility_matrix.txt: Intel Core i9-14900K rows
 
-Q: What should I check if the drone keeps disconnecting?
-A: Power and proximity, RF interference, band/channel, antenna orientation, firmware versions, then re-link and export logs.
-S: troubleshooting_connectivity.txt: Steps 1–8; firmware_compatibility_matrix.txt
+Q: What should I check if my new build has no display?
+A: Power cables (24-pin, EPS, GPU), monitor output selection, single-stick RAM test, reseat GPU, clear CMOS, update BIOS.
+S: troubleshooting_connectivity.txt: Steps 1–5; troubleshooting_error_codes.txt: CPU/DRAM/VGA LEDs
 
-Q: Which SD cards are recommended?
-A: UHS‑I U3 V30 or better; format in camera.
-S: error_codes E401; product_specs_geodrone_pro.txt
+Q: Is 850W enough for an RTX 4090 system?
+A: Recommend 1000W+; consider up to 1600W for OC; ensure ATX 3.0/3.1 PSU with 12VHPWR.
+S: product_list.txt: PSUs; firmware_compatibility_matrix.txt: Notes
 
-Q: What is covered by the warranty?
-A: 12-month limited warranty; excludes crash/water damage, unauthorized mods, cosmetic wear, consumables beyond normal wear.
-S: warranty_and_rma.txt: Warranty Coverage
+Q: What is covered by returns and warranty?
+A: 30-day returns unopened; 15-day DOA replacement; otherwise manufacturer warranty; exclusions include physical/liquid damage and bent pins.
+S: warranty_and_rma.txt: Warranty & Returns Coverage
 
-Q: How should I order updates to avoid version mismatch?
-A: Synapse app, then Controller FW, then Aircraft FW; re-link after updates.
-S: firmware_compatibility_matrix.txt: Notes; support_faq.txt
+Q: Do you store payment card details?
+A: No. Payments handled by PCI-DSS compliant providers; no full card storage on our systems.
+S: security_privacy_overview.txt: Data Protection
 
-Q: Is data encrypted on Synapse?
-A: Yes, encrypted in transit and at rest; access restricted to your account.
-S: support_faq.txt; software_synapse_platform.txt: Overview
-
-Q: Can I fly in light rain with GeoDrone Pro?
-A: No, IP54 is splash resistant only; do not fly in rain.
-S: product_specs_geodrone_pro.txt; safety_and_regulatory.txt
-
-Q: My question: Does Nimbus Mini support LiDAR payloads?
-A: Cannot answer from current corpus.
+Q: My question: Does the CableMod Pro ModMesh Cable Kit fit my PSU?
+A: Cannot answer from current corpus; check model-specific compatibility.
 S: none 

@@ -2,7 +2,7 @@
 import os
 
 # Select vector backend: "pinecone" or "in_memory" (default)
-_BACKEND = os.getenv("RAG_VECTOR_BACKEND", "in_memory").lower()
+_BACKEND = os.getenv("RAG_VECTOR_BACKEND", "RAG_VECTOR_BACKEND").lower()
 
 if _BACKEND == "pinecone":
     from src.services.vectorstores.pinecone_service import get_pinecone_service

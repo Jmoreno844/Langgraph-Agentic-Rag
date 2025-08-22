@@ -1,24 +1,25 @@
 ---
-title: Safety and Regulatory Guidance
+title: Build Safety & Handling Guidance
 doc_type: safety
 version: 1.0
 effective_date: 2025-08-19
-product: GeoDrone Pro
+product: PC Components
 audience: End Users, Support Agents
-tags: [safety, regulatory]
+tags: [safety, handling]
 ---
 
-Flight Safety
-- Always maintain visual line of sight; avoid flying over people.
-- Check local weather; do not fly in rain or high winds beyond spec.
-- Set RTH altitude above tallest nearby obstacle; verify Home Point.
+ESD Precautions
+- Work on a non-conductive surface; use an anti-static wrist strap if available.
+- Ground yourself before handling PCBs; handle GPUs, RAM, and motherboards by the edges.
 
-Battery Safety
-- Inspect for swelling or damage; discontinue use if observed.
-- Store at 40–60% charge if unused for >10 days.
-- Do not leave charging batteries unattended.
+Power Safety
+- Disconnect power and hold the case power button for 5–10 seconds to discharge before servicing.
+- Verify PSU switch is off (O) when connecting 24-pin, 8-pin CPU, and PCIe GPU cables.
 
-Regulatory
-- Comply with local aviation rules (e.g., FAA Part 107 in the U.S.).
-- Respect geofencing and no-fly zones as indicated in the app.
-- Obtain permissions for restricted airspace; keep logs for audits. 
+Thermal & Mechanical
+- Apply a pea-sized amount of thermal paste; do not overtighten coolers.
+- Watch for sharp case edges; route cables to avoid fan blades.
+
+Data & Disposal
+- Wipe storage devices before RMA/return.
+- Recycle e-waste per local regulations; do not dispose of Li-ion batteries in household trash. 

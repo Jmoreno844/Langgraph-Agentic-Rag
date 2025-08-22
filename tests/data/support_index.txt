@@ -1,24 +1,23 @@
 ---
-title: Aetherix Support Index
+title: TechForge Support Index
 doc_type: index
 version: 1.0
 effective_date: 2025-08-19
-product: GeoDrone Pro, Synapse Platform
+product: PC Components
 audience: End Users, Support Agents
 tags: [index, navigation]
 ---
 
 Overview
-This index lists support documents for setup, troubleshooting, policies, and releases.
+This index lists support documents for compatibility, troubleshooting, policies, and releases.
 
 Documents
-- quick_start_geodrone_pro.txt: Step-by-step guide to unboxing, pairing, first flight, data capture, and upload.
-- troubleshooting_connectivity.txt: Connectivity diagnostics between drone and controller with re-linking procedures.
-- troubleshooting_error_codes.txt: Error codes, causes, and resolution steps.
-- firmware_compatibility_matrix.txt: Supported combinations of drone, controller, and Synapse app versions.
-- warranty_and_rma.txt: Warranty terms, coverage exclusions, and RMA process.
-- synapse_release_notes_2025_08.txt: Latest Synapse app changes, fixes, and known issues.
+- troubleshooting_connectivity.txt: No POST/No Display diagnostic steps for new builds.
+- troubleshooting_error_codes.txt: Common motherboard POST indicators and beep codes.
+- firmware_compatibility_matrix.txt: Supported CPU, chipset, BIOS, and memory combinations.
+- warranty_and_rma.txt: Returns policy, DOA handling, and RMA process.
+- synapse_release_notes_2025_08.txt: Latest site changes, fixes, and known issues.
 - support_faq.txt: Frequently asked questions and concise answers.
-- product_specs_geodrone_pro.txt: Technical specifications relevant to operation and support.
-- software_synapse_platform.txt: Platform features, tiers, and support-relevant details.
-- safety_and_regulatory.txt: Safety guidance and regulatory compliance notes. 
+- software_synapse_platform.txt: Assembly & services features and tiers.
+- safety_and_regulatory.txt: Build safety and handling guidance.
+- product_list.txt: Catalog snapshot of current items. 

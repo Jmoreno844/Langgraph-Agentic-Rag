@@ -1,50 +1,42 @@
 ---
-title: Troubleshooting — Drone to Controller Connectivity
+title: Troubleshooting — No POST / No Display
 doc_type: troubleshooting
 version: 1.0
 effective_date: 2025-08-19
-product: GeoDrone Pro
+product: PC Components
 audience: End Users, Support Agents
-tags: [connectivity, linking, rf]
+tags: [build, post, diagnostics]
 ---
 
 Issue
-The drone is not connecting or frequently disconnects from the remote controller.
+The PC powers on but does not show a display or complete POST.
 
-Step 1 — Power and Proximity
-- Ensure drone and controller are ≥50% battery.
-- Keep within 1–3 m during initial linking; avoid obstacles between devices.
+Step 1 — Power and Cables
+- Ensure PSU is switched on; 24-pin ATX and 8-pin (or 8+4) EPS CPU power connected.
+- Connect PCIe power to GPU (12VHPWR or 8-pin PCIe as applicable) until fully seated.
 
-Step 2 — RF Interference Check
-- Move at least 20 m away from Wi‑Fi APs, power lines, cellular towers.
-- Disable phone hotspot/nearby hotspots during linking.
+Step 2 — Monitor & Video Outputs
+- Test with a known-good cable/monitor; try motherboard HDMI/DP when using iGPU.
+- For dedicated GPUs, use GPU outputs only; disable integrated graphics if needed.
 
-Step 3 — Band and Region Settings
-- Confirm controller region is correct (2.4 GHz in CE regions; 2.4/5.8 GHz in FCC where allowed).
-- Switch bands (2.4 ↔ 5.8 GHz) and channels to find a clearer spectrum.
+Step 3 — Memory Seating
+- Install a single RAM module in the recommended slot (per manual).
+- Reseat memory; try alternate slot and clear CMOS.
 
-Step 4 — Re-Linking Procedure
-1. Power on both devices.
-2. Controller: Settings > Linking > Start Linking.
-3. Aircraft: Press and hold pairing button for 3 seconds until beep.
-4. Wait for “Linking Successful.” If it fails, retry after power cycle.
+Step 4 — GPU and Storage
+- Reseat the GPU; ensure it clicks into the PCIe slot.
+- Temporarily disconnect all storage and USB devices except keyboard.
 
-Step 5 — LED and On-Screen Indicators
-- Controller link icon blinking red: Not linked.
-- Solid green: Strong link; yellow: degraded link; red: lost link.
-- Aircraft status LED fast yellow flash: Linking mode; slow red flash: low signal.
+Step 5 — BIOS and Compatibility
+- Update to the latest BIOS using Flashback (if supported) or with a compatible CPU.
+- Verify CPU, motherboard, and RAM against firmware_compatibility_matrix.txt and vendor QVL.
 
-Step 6 — Firmware and App Versions
-- Verify versions against firmware_compatibility_matrix.txt.
-- If mismatched, update controller app first, then aircraft firmware.
+Step 6 — Beep/LED Codes
+- Reference motherboard Q-LEDs or beep codes; see troubleshooting_error_codes.txt for common meanings.
 
-Step 7 — Antenna and Hardware
-- Ensure antennas are fully extended and oriented perpendicular to the aircraft line-of-sight.
-- Inspect connectors for damage; try a known-good cable if using wired link.
-
-Step 8 — Diagnostics and Logs
-- Controller: Settings > Diagnostics > Spectrum Analyzer (check noise floor).
-- Export logs: Settings > Diagnostics > Export Logs and attach to support case.
+Step 7 — Minimal Boot
+- Test motherboard outside the case on a non-conductive surface.
+- Boot with CPU + 1x RAM + GPU (if no iGPU) only. Add components one by one.
 
 Escalation
-If the above fails, perform a factory reset (Settings > System > Reset), re-link, and test in a different location. Contact support with serial numbers and logs. 
+If issues persist, open a support case with full build list, serial numbers, photos, and a short video of power-on behavior. 

@@ -1,39 +1,34 @@
 ---
-title: Error Codes Reference — GeoDrone Pro
+title: Error Codes Reference — Motherboard POST
 doc_type: reference
 version: 1.0
 effective_date: 2025-08-19
-product: GeoDrone Pro
+product: PC Components
 audience: End Users, Support Agents
 tags: [errors, diagnostics]
 ---
 
-Code E101 — IMU Calibration Required
-- Symptom: Drift, unstable hover.
-- Cause: IMU out of tolerance after transport.
-- Resolution: Settings > Sensors > IMU > Calibrate on level surface.
+Code 55 — Memory Not Installed/Detected
+- Symptom: DRAM LED lit; no display.
+- Cause: Incorrect slot usage or poor seating.
+- Resolution: Install a single stick in the preferred slot; reseat or try alternate stick.
 
-Code E102 — Compass Interference
-- Symptom: Compass error; RTH disabled.
-- Cause: Magnetic interference (metal surfaces, speakers).
-- Resolution: Move 10+ m away; Settings > Sensors > Compass > Calibrate.
+Code A2 — IDE Detect / Storage Init
+- Symptom: Hangs at logo; no boot device found.
+- Cause: Drive or cable issue; incorrect boot order.
+- Resolution: Reseat data/power cables; set correct boot device; test with one drive.
 
-Code E201 — Link Lost
-- Symptom: Controller shows red link icon; failsafe RTH triggers.
-- Cause: RF interference or antenna misalignment.
-- Resolution: Reorient antennas; change band/channel; see troubleshooting_connectivity.txt.
+CPU LED Solid — CPU Error
+- Symptom: No POST; fans spin.
+- Cause: Missing 8-pin/EPS, bent socket pins, incompatible BIOS.
+- Resolution: Verify EPS power, inspect socket (Intel), update BIOS.
 
-Code E301 — Gimbal Overload
-- Symptom: Shaking video; gimbal error.
-- Cause: Gimbal lock attached or mechanical obstruction.
-- Resolution: Power off; remove lock; ensure free movement; reboot.
+VGA LED Solid — GPU Error
+- Symptom: No display output from GPU.
+- Cause: GPU not fully seated or insufficient power.
+- Resolution: Reseat GPU; check PCIe/12VHPWR connections; test alternate slot.
 
-Code E401 — SD Card Error
-- Symptom: Cannot record; dropped frames.
-- Cause: Incompatible or slow SD card.
-- Resolution: Use UHS‑I U3 V30 or better; format in camera.
-
-Code E501 — Firmware Mismatch
-- Symptom: Linking fails; features disabled.
-- Cause: Controller/app and aircraft on incompatible versions.
-- Resolution: Update controller app first, then aircraft; verify with firmware_compatibility_matrix.txt. 
+Boot LED Solid — Boot Device Error
+- Symptom: Enters BIOS; OS not loading.
+- Cause: No OS or wrong boot mode.
+- Resolution: Set UEFI mode; select OS drive; repair bootloader if needed. 

@@ -13,4 +13,7 @@ fastapi[standard]
 psycopg[binary,pool]
 
 pytest
+SQLAlchemy
+alembic
+python-dotenv
 

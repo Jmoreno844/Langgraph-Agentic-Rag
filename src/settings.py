@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     VOYAGE_API_KEY: str
     PINECONE_API_KEY: str
     PINECONE_INDEX: str
+    PINECONE_EMBEDDINGS_MODEL: str = "llama-text-embed-v2"
     AWS_ACCESS_KEY_ID: str
     AWS_SECRET_ACCESS_KEY: str
     AWS_S3_RAG_DOCUMENTS_BUCKET: str

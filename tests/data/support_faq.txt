@@ -3,22 +3,22 @@ title: Support FAQ
 doc_type: faq
 version: 1.0
 effective_date: 2025-08-19
-product: GeoDrone Pro, Synapse Platform
+product: PC Components
 audience: End Users, Support Agents
 tags: [faq]
 ---
 
-Q: What is the warranty on Aetherix Dynamics drones?
-A: 12-month limited warranty against manufacturing defects. Crash/water damage and modifications are excluded. See warranty_and_rma.txt.
+Q: What is your return and warranty policy?
+A: 30-day returns for unopened items; 15-day DOA replacement; manufacturer warranty applies afterward. See warranty_and_rma.txt.
 
-Q: How do I update my GeoDrone Pro's firmware?
-A: Update order: Synapse app → Controller FW → Aircraft FW. Verify versions in firmware_compatibility_matrix.txt. Re-link after updates.
+Q: Will an Intel Core i9-14900K work with the ASUS ROG Maximus Z790 Hero?
+A: Yes, with a recent BIOS. Use DDR5 memory and enable XMP. See firmware_compatibility_matrix.txt.
 
-Q: My drone won't connect to the controller. What should I do?
-A: Start with troubleshooting_connectivity.txt; check power, proximity, RF interference, then re-link.
+Q: Is an 850W PSU enough for an RTX 4090 build?
+A: We recommend 1000W+ for typical 4090 systems; consider 1200–1600W for heavy overclocks. See product_list.txt for options.
 
-Q: Which SD cards are supported?
-A: Use UHS‑I U3 V30 or better; format in-camera for best performance.
+Q: My PC powers on but there is no display. What should I try?
+A: Check CPU 8-pin/EPS and GPU PCIe cables, reseat RAM/GPU, try motherboard HDMI/DP if using iGPU, clear CMOS, and test a single RAM stick. See troubleshooting_connectivity.txt.
 
-Q: Is my data private on Synapse?
-A: Yes. Data is encrypted in transit and at rest. Access is limited to your account. For audits, export logs and permissions from Settings. 
+Q: Do you store my card details?
+A: No. Payments are processed by PCI-DSS compliant providers. See security_privacy_overview.txt. 

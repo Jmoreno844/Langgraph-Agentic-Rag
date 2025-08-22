@@ -33,12 +33,12 @@ class Document(BaseModel):
 
 
 class UploadResult(BaseModel):
-    key: str = Field(..., description="S3 object key for the uploaded file")
-    etag: str = Field(..., description="ETag returned by S3 for the upload")
+    key: str
+    etag: str
 
 
 class DeleteResult(BaseModel):
-    key: str = Field(..., description="S3 object key that was deleted")
+    key: str
     deleted: bool = Field(
         ...,
         description="Whether the S3 object was deleted. Pinecone vector cleanup is attempted separately and does not affect this flag.",
@@ -46,8 +46,8 @@ class DeleteResult(BaseModel):
 
 
 class SyncStatus(BaseModel):
-    key: str = Field(..., description="S3 key (also Pinecone doc_id)")
-    etag: Optional[str] = Field(None, description="Current S3 ETag for the object")
+    key: str
+    etag: Optional[str] = None
     status: str = Field(
         ...,
         description="One of: in_sync (vectors present and match etag), stale (vectors present but no match on etag), not_indexed (no vectors).",
