@@ -10,7 +10,6 @@ response_model = init_chat_model(
 GENERATE_PROMPT = (
     "You are an assistant for question-answering tasks. "
     "Use the following pieces of retrieved context to answer the question. "
-    "If you don't know the a part of the answer, say that you dont know that part and answer the rest of the question. "
     "Use three sentences maximum and keep the answer concise.\n"
     "Question: "
     " {question}"

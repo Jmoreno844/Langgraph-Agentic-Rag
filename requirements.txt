@@ -17,3 +17,8 @@ SQLAlchemy
 alembic
 python-dotenv
 
+
+guardrails-ai>=0.4.0
+tenacity>=8.1.0
+transformers>=4.11.3
+torch>=2.1.1
