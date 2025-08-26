@@ -13,6 +13,8 @@ from src.graph.tools.list_product_categories import list_product_categories_tool
 from src.graph.state import CustomMessagesState
 from src.graph.nodes.guardrail import topic_guardrail
 from src.graph.nodes.guardrail_response import guardrail_response
+from src.graph.routing.source_router import source_router
+from src.graph.nodes.verify_groundedness import verify_groundedness
 
 tools = ToolNode([retriever_tool, query_products_tool, list_product_categories_tool])
 graph = StateGraph(CustomMessagesState)
@@ -23,6 +25,8 @@ graph.add_node(generate_answer_or_rag)
 graph.add_node(generate_answer)
 # graph.add_node(rewrite_question)
 graph.add_node("tools", tools)
+graph.add_node("source_router", source_router)
+graph.add_node("verify_groundedness", verify_groundedness)
 
 graph.add_edge(START, "topic_guardrail")
 graph.add_conditional_edges(
@@ -45,5 +49,14 @@ graph.add_conditional_edges(
         END: END,
     },
 )
-graph.add_edge("tools", "generate_answer")
-graph.add_edge("generate_answer", END)
+# Route through source_router after tools to set flags for guardrails/prompting
+graph.add_edge("tools", "source_router")
+graph.add_edge("source_router", "generate_answer")
+
+# Verify groundedness before finalizing
+graph.add_edge("generate_answer", "verify_groundedness")
+graph.add_conditional_edges(
+    "verify_groundedness",
+    lambda state: END if state.get("grounded_ok", True) else "guardrail_response",
+    {END: END, "guardrail_response": "guardrail_response"},
+)
