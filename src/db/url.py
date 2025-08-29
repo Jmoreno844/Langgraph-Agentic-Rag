@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from decouple import config
-from pydantic import PostgresDsn
+from sqlalchemy.engine.url import make_url
 
 
 def _strip_driver(url: str) -> str:
@@ -22,9 +22,11 @@ def get_libpq_url() -> str:
 
 
 def get_sqlalchemy_async_url(driver: str = "asyncpg") -> str:
-    user = config("POSTGRES_USER", default="postgres")
-    password = config("POSTGRES_PASSWORD", default="postgres")
-    host = config("POSTGRES_HOST", default="localhost")
-    port = config("POSTGRES_PORT", default=5432, cast=int)
-    db = config("POSTGRES_DB", default="postgres")
-    return f"postgresql+{driver}://{user}:{password}@{host}:{port}/{db}"
+    db_url = config("AWS_DB_URL")
+    url = make_url(db_url)
+    url = url.set(drivername=f"postgresql+{driver}")
+    if "sslmode" in url.query:
+        query = dict(url.query)
+        del query["sslmode"]
+        url = url.set(query=query)
+    return str(url)

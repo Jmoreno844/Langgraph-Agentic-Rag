@@ -17,6 +17,7 @@ pytest
 SQLAlchemy
 alembic
 python-dotenv
+python-decouple
 
 
 guardrails-ai>=0.4.0
@@ -25,3 +26,4 @@ transformers>=4.11.3
 torch>=2.1.1
 
 #guardrails hub install hub://guardrails/detect_pii
+certifi
