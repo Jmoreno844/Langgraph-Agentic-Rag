@@ -18,14 +18,20 @@ ALLOWED_TOPICS: List[str] = [
     "product categories",
 ]
 
+INVALID_TOPICS: List[str] = [
+    "human body",
+]
+
 # Initialize a Guard with a topic restriction validator
 # Best practice: use deterministic classification; do not rely on LLM to "fix" user input
 _guard = Guard().use(
     RestrictToTopic(
         valid_topics=ALLOWED_TOPICS,
+        invalid_topics=INVALID_TOPICS,
         disable_classifier=False,
         disable_llm=True,
         on_fail="exception",
+        model_threshold=0.95,
     )
 )
 

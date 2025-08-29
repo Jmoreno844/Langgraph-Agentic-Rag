@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from langchain_core.tools import tool
 
 from src.app.features.products.service import list_products
+from src.db.session import get_async_db
 
 
 class ProductQuery(BaseModel):
@@ -33,7 +34,7 @@ class ProductQuery(BaseModel):
 
 
 @tool("query_products", args_schema=ProductQuery)
-def query_products_tool(
+async def query_products_tool(
     *,
     category: Optional[str] = None,
     status: Optional[str] = None,
@@ -48,17 +49,19 @@ def query_products_tool(
 
     Returns a list of products with fields: id, name, category, price, status, model, aliases, tags, created_at, updated_at.
     """
-    products = list_products(
-        category=category,
-        status=status,
-        model=model,
-        min_price=min_price,
-        max_price=max_price,
-        search=search,
-        limit=min(limit, 50),
-        offset=offset,
-    )
-    return [p.model_dump() for p in products]
+    async with get_async_db() as db:
+        products = await list_products(
+            db=db,
+            category=category,
+            status=status,
+            model=model,
+            min_price=min_price,
+            max_price=max_price,
+            search=search,
+            limit=min(limit, 50),
+            offset=offset,
+        )
+        return [p.model_dump() for p in products]
 
 
 __all__ = ["query_products_tool", "ProductQuery"]

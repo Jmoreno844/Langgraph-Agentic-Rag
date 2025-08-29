@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Iterable
-from langgraph.graph import MessagesState
+from src.graph.state import CustomMessagesState
 
 
 _DB_TOOL_NAMES = {"query_products", "list_product_categories"}
@@ -70,20 +70,16 @@ def _infer_docs_importance(user_text: str) -> str:
     return "normal"
 
 
-def source_router(state: MessagesState):
+def source_router(state: CustomMessagesState):
     messages = state["messages"]
     source_db, source_docs = _detect_sources(messages)
     user_text = _latest_user_content(messages)
     importance = _infer_docs_importance(user_text)
 
-    # Minimal rule: verify when DB is involved, or when docs importance is high
-    verify_answer = bool(source_db) or (importance == "high" and bool(source_docs))
-
     return {
         "source_db": bool(source_db),
         "source_docs": bool(source_docs),
         "docs_importance": importance,
-        "verify_answer": verify_answer,
     }
 
 

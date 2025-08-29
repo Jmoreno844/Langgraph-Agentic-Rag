@@ -8,4 +8,3 @@ class CustomMessagesState(MessagesState):
     source_db: bool = False
     source_docs: bool = False
     docs_importance: str = "normal"
-    verify_answer: bool = False

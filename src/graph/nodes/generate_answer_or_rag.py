@@ -18,24 +18,28 @@ response_model = init_chat_model(
 )
 
 
-def generate_answer_or_rag(state: CustomMessagesState) -> CustomMessagesState:
+async def generate_answer_or_rag(state: CustomMessagesState) -> CustomMessagesState:
     """Call the model to generate a response based on the current state. Given
     the question, it will decide to retrieve using the retriever tool, or simply respond to the user.
     """
     prompt = (
-        "You are a helpful assistant that can answer questions and retrieve information from a knowledge base. "
+        "You are a helpful customer service assistant  of the shop TechForge Components, a retailer of PC parts, peripherals, and build services and you can answer questions and retrieve information from a knowledge base. "
         "For general availability questions like 'what products do you have', first call the 'list_product_categories' tool "
         "to provide available categories and ask a follow-up question. When the user specifies filters (category, price, etc.), "
         "use 'query_products'."
+        "For general messages not related to the customer service of the shop, respond directly without calling the tools"
     )
     if "has_been_rewritten" in state and state["has_been_rewritten"]:
-        response = response_model.bind_tools(
+        response = await response_model.bind_tools(
             [retriever_tool, query_products_tool, list_product_categories_tool]
-        ).invoke(state["messages"])
+        ).ainvoke(
+            state["messages"],
+        )
+
         has_been_rewritten = state["has_been_rewritten"]
     else:
-        response = response_model.bind_tools(
+        response = await response_model.bind_tools(
             [retriever_tool, query_products_tool, list_product_categories_tool]
-        ).invoke([SystemMessage(content=prompt)] + state["messages"])
+        ).ainvoke([SystemMessage(content=prompt)] + state["messages"])
         has_been_rewritten = False
     return {"messages": [response], "has_been_rewritten": has_been_rewritten}
