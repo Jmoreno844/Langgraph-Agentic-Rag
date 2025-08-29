@@ -12,6 +12,7 @@ import certifi
 import asyncpg
 from sqlalchemy.engine.url import make_url
 from decouple import config
+from pathlib import Path
 
 from .url import get_sqlalchemy_url, get_sqlalchemy_async_url
 
@@ -33,10 +34,19 @@ def _ensure_engine_and_factory() -> None:
 def _ensure_async_engine_and_factory() -> None:
     global _async_engine, _AsyncSessionLocal
     if _AsyncSessionLocal is None:
-        # Build SSL context like the working direct asyncpg connection
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
+        # Resolve RDS CA bundle path: env var RDS_CA_BUNDLE or default to project root
+        project_root = Path(__file__).resolve().parents[2]
+        default_ca = project_root / "certs" / "us-east-1-bundle.pem"
+        ca_bundle_path = Path(config("RDS_CA_BUNDLE", default=str(default_ca)))
+        if not ca_bundle_path.exists():
+            raise RuntimeError(
+                f"RDS CA bundle not found at {ca_bundle_path}. Set RDS_CA_BUNDLE or place 'us-east-1-bundle.pem' at project root."
+            )
+
+        # Create SSL context that verifies server certificate and hostname
+        ssl_context = ssl.create_default_context(cafile=str(ca_bundle_path))
+        ssl_context.check_hostname = True
+        ssl_context.verify_mode = ssl.CERT_REQUIRED
 
         # Parse components from the configured URL
         raw_url = config("AWS_DB_URL")
