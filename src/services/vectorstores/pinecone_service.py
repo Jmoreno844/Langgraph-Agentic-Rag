@@ -1,9 +1,10 @@
 from typing import Optional, Sequence, Tuple
 
 from langchain_pinecone import PineconeVectorStore, PineconeEmbeddings
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.tools.retriever import create_retriever_tool
-from langchain_voyageai import VoyageAIRerank
+from src.graph.retrievers.factory import (
+    maybe_wrap_with_compression,
+    create_standard_retriever_tool,
+)
 from src.settings import settings
 
 
@@ -22,29 +23,14 @@ class PineconeVectorStoreService:
             index_name=settings.PINECONE_INDEX,
             embedding=self._embedding,
         )
-        self._reranker = VoyageAIRerank(
-            model="rerank-lite-1",
-            voyageai_api_key=settings.VOYAGE_API_KEY,
-            top_k=3,
-        )
 
-    def get_retriever(self, k: int = 5) -> ContextualCompressionRetriever:
+    def get_retriever(self, k: int = 5):
         base_retriever = self._vectorstore.as_retriever(search_kwargs={"k": k})
-        return ContextualCompressionRetriever(
-            base_compressor=self._reranker,
-            base_retriever=base_retriever,
-        )
+        return base_retriever
 
     def get_retriever_tool(self):
         retriever = self.get_retriever()
-        return create_retriever_tool(
-            retriever,
-            "retrieve_rag_docs",
-            (
-                "Search Aetherix Dynamics product, company and support "
-                "documentation and return the most relevant snippets."
-            ),
-        )
+        return create_standard_retriever_tool(retriever)
 
     def upsert_documents(self, docs: Sequence, *, namespace: Optional[str] = None):
         """Add or update documents in the Pinecone index."""

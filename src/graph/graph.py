@@ -7,11 +7,11 @@ from src.graph.routing.document_grader import document_grader
 from src.graph.nodes.generate_answer_or_rag import generate_answer_or_rag
 from src.graph.nodes.generate_answer import generate_answer
 from src.graph.nodes.rewrite_question import rewrite_question
-from src.graph.tools.retriever import retriever_tool
+from src.graph.tools.hybrid_retriever import retriever_tool
 from src.graph.tools.query_products import query_products_tool
 from src.graph.tools.list_product_categories import list_product_categories_tool
 from src.graph.state import CustomMessagesState
-from src.graph.nodes.guardrail import topic_guardrail
+from graph.guardrails.topic_restriction import topic_guardrail
 from src.graph.nodes.guardrail_response import guardrail_response
 from src.graph.routing.source_router import source_router
 

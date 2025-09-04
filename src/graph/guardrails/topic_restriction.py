@@ -16,6 +16,7 @@ ALLOWED_TOPICS: List[str] = [
     "product",
     "product support",
     "product categories",
+    "greetings",
 ]
 
 INVALID_TOPICS: List[str] = [
@@ -31,7 +32,7 @@ _guard = Guard().use(
         disable_classifier=False,
         disable_llm=True,
         on_fail="exception",
-        model_threshold=0.95,
+        model_threshold=0.5,
     )
 )
 

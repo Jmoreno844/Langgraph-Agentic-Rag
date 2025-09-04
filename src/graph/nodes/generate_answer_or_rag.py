@@ -1,7 +1,7 @@
 from langgraph.graph import MessagesState
 from langchain_core.messages import SystemMessage
 from langchain.chat_models import init_chat_model
-from src.graph.tools.retriever import retriever_tool
+from src.graph.tools.hybrid_retriever import retriever_tool
 from dotenv import load_dotenv
 
 from src.graph.state import CustomMessagesState
@@ -27,6 +27,7 @@ async def generate_answer_or_rag(state: CustomMessagesState) -> CustomMessagesSt
         "For general availability questions like 'what products do you have', first call the 'list_product_categories' tool "
         "to provide available categories and ask a follow-up question. When the user specifies filters (category, price, etc.), "
         "use 'query_products'."
+        "For policy, refund, returns, warranty, shipping, FAQs, setup/support, or documentation questions, call the 'retrieve_rag_docs' tool with the user's question to ground your answer. "
         "For general messages not related to the customer service of the shop, respond directly without calling the tools"
     )
     if "has_been_rewritten" in state and state["has_been_rewritten"]:

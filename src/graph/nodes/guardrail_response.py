@@ -1,7 +1,7 @@
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage
 from src.graph.state import CustomMessagesState
-from src.graph.nodes.guardrail import ALLOWED_TOPICS
+from graph.guardrails.topic_restriction import ALLOWED_TOPICS
 
 response_model = init_chat_model(
     "openai:gpt-4o-mini",
@@ -20,7 +20,7 @@ PROMPT_TEMPLATE = (
 )
 
 
-def guardrail_response(state: CustomMessagesState) -> CustomMessagesState:
+async def guardrail_response(state: CustomMessagesState) -> CustomMessagesState:
     if not state.get("messages"):
         return {}
     user_text = state["messages"][-1].content
@@ -28,5 +28,5 @@ def guardrail_response(state: CustomMessagesState) -> CustomMessagesState:
         allowed_topics=", ".join(ALLOWED_TOPICS),
         user_message=user_text,
     )
-    ai = response_model.invoke([{"role": "user", "content": prompt}])
+    ai = await response_model.ainvoke([{"role": "user", "content": prompt}])
     return {"messages": [AIMessage(content=ai.content)]}

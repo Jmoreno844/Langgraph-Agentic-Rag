@@ -1,12 +1,11 @@
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
 from src.graph.ingestion.local_loader_splitter import load_local_documents
-from langchain.tools.retriever import create_retriever_tool
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain_voyageai import VoyageAIRerank
-from src.settings import settings
 from pathlib import Path
-import os
+from src.graph.retrievers.factory import (
+    maybe_wrap_with_compression,
+    create_standard_retriever_tool,
+)
 
 
 def create_in_memory_retriever_tool():
@@ -26,25 +25,9 @@ def create_in_memory_retriever_tool():
 
     base_retriever = vectorStore.as_retriever(search_kwargs={"k": 5})
 
-    use_compression = os.getenv("RAG_USE_COMPRESSION", "true").lower() == "true"
-    if use_compression:
-        compressor = VoyageAIRerank(
-            model="rerank-lite-1", voyageai_api_key=settings.VOYAGE_API_KEY, top_k=3
-        )
-        retriever = ContextualCompressionRetriever(
-            base_compressor=compressor, base_retriever=base_retriever
-        )
-    else:
-        retriever = base_retriever
+    retriever = maybe_wrap_with_compression(base_retriever)
 
-    retriever_tool = create_retriever_tool(
-        retriever,
-        "retrieve_rag_docs",
-        description=(
-            "Search Aetherix Dynamics product, company and support "
-            "documentation and return the most relevant snippets."
-        ),
-    )
+    retriever_tool = create_standard_retriever_tool(retriever)
     return retriever_tool, retriever
 
 

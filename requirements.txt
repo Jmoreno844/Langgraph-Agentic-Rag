@@ -8,6 +8,7 @@ langgraph-checkpoint-postgres
 pypdf
 boto3
 unstructured
+rank_bm25
 
 fastapi[standard]
 psycopg[binary,pool]
