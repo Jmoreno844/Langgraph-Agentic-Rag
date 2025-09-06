@@ -107,6 +107,64 @@ async def list_documents_sync():
     return statuses
 
 
+@router.get(
+    "/documents/debug",
+    summary="Debug endpoint to check S3 and Pinecone status",
+    tags=["documents"],
+)
+async def debug_sync():
+    """Debug endpoint to check what's in S3 and Pinecone."""
+    try:
+        # Check S3
+        s3_contents = await asyncio.to_thread(
+            get_s3_bucket_contents, settings.AWS_S3_RAG_DOCUMENTS_BUCKET
+        )
+        s3_keys = [obj["Key"] for obj in s3_contents]
+        
+        # Check Pinecone
+        pinecone_service = get_pinecone_service()
+        
+        # Try to get doc_ids
+        pinecone_doc_ids = await asyncio.to_thread(pinecone_service.get_all_indexed_doc_ids)
+        
+        # Try to get total vector count
+        try:
+            from pinecone import Pinecone
+            pc = Pinecone(api_key=settings.PINECONE_API_KEY)
+            index = pc.Index(settings.PINECONE_INDEX)
+            stats = index.describe_index_stats()
+            total_vectors = stats.get('total_vector_count', 0)
+            
+            # Try to list some vectors
+            vector_list = list(index.list(namespace="", limit=3))
+            sample_vectors = []
+            for v in vector_list[:3]:
+                vid = v.get('id') if isinstance(v, dict) else str(v)
+                sample_vectors.append(vid)
+                
+        except Exception as e:
+            total_vectors = 0
+            sample_vectors = []
+            vector_error = str(e)
+        
+        return {
+            "s3": {
+                "bucket": settings.AWS_S3_RAG_DOCUMENTS_BUCKET,
+                "document_count": len(s3_keys),
+                "sample_keys": s3_keys[:5]
+            },
+            "pinecone": {
+                "index": settings.PINECONE_INDEX,
+                "documents_with_metadata": len(pinecone_doc_ids),
+                "sample_doc_ids": pinecone_doc_ids[:5],
+                "total_vectors": total_vectors,
+                "sample_vector_ids": sample_vectors,
+                "error": vector_error if 'vector_error' in locals() else None
+            }
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 @router.post(
     "/documents/sync",
     response_model=SyncResult,
