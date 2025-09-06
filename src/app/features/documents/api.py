@@ -16,6 +16,7 @@ from src.app.features.documents.schemas import (
     SyncStatus,
     SyncResult,
 )
+from src.services.s3_service import get_s3_bucket_contents
 from .service import (
     sync_documents as svc_sync_documents,
     list_documents as svc_list_documents,
