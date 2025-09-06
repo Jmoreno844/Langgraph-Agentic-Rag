@@ -9,6 +9,7 @@ from fastapi import (
     Response,
 )
 from typing import Optional
+import asyncio
 from src.app.features.documents.schemas import (
     Document,
     DeleteResult,
