@@ -1,5 +1,5 @@
 from langgraph.graph import MessagesState
-from typing import List, Any, Optional
+from typing import List, Any
 
 
 class CustomMessagesState(MessagesState):
@@ -8,5 +8,3 @@ class CustomMessagesState(MessagesState):
     source_db: bool = False
     source_docs: bool = False
     docs_importance: str = "normal"
-    current_question: Optional[str] = None
-    retrieved_context: Optional[List[str]] = None

@@ -19,7 +19,7 @@ SQLAlchemy
 alembic
 python-dotenv
 python-decouple
-
+deepeval
 
 guardrails-ai>=0.4.0
 tenacity>=8.1.0
