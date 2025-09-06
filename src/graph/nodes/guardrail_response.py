@@ -1,7 +1,7 @@
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage
 from src.graph.state import CustomMessagesState
-from graph.guardrails.topic_restriction import ALLOWED_TOPICS
+from src.graph.guardrails.topic_restriction import ALLOWED_TOPICS
 
 response_model = init_chat_model(
     "openai:gpt-4o-mini",

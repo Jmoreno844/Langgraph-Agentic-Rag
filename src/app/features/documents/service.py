@@ -1,5 +1,6 @@
 from typing import Optional, Tuple
 from fastapi import HTTPException, UploadFile
+import asyncio
 from src.services.s3_service import (
     get_s3_bucket_contents,
     create_presigned_url,
@@ -53,7 +54,9 @@ def _delete_key_from_pinecone(key: str) -> None:
 
 
 async def list_documents(include_url: bool) -> list[Document]:
-    contents = get_s3_bucket_contents(settings.AWS_S3_RAG_DOCUMENTS_BUCKET)
+    contents = await asyncio.to_thread(
+        get_s3_bucket_contents, settings.AWS_S3_RAG_DOCUMENTS_BUCKET
+    )
     return [
         Document(
             key=obj["Key"],
@@ -74,25 +77,31 @@ async def list_documents(include_url: bool) -> list[Document]:
     ]
 
 
-def get_document_sync_status(key: str) -> tuple[str, int, int, str]:
+async def get_document_sync_status(key: str) -> tuple[str, int, int, str]:
     """Return (status, vectors_for_doc_id, vectors_for_doc_id_and_etag, etag)."""
-    head = head_object_from_s3(settings.AWS_S3_RAG_DOCUMENTS_BUCKET, key)
+    head = await asyncio.to_thread(
+        head_object_from_s3, settings.AWS_S3_RAG_DOCUMENTS_BUCKET, key
+    )
     etag = head.get("ETag", "").strip('"')
     service = get_pinecone_service()
-    count_doc, count_both = service.get_vector_counts(key, etag)
-    status = service.get_sync_status(key, etag)
+    count_doc, count_both = await asyncio.to_thread(
+        service.get_vector_counts, key, etag
+    )
+    status = await asyncio.to_thread(service.get_sync_status, key, etag)
     return status, count_doc, count_both, etag
 
 
-def list_sync_statuses() -> list[tuple[str, str, int, int]]:
+async def list_sync_statuses() -> list[tuple[str, str, int, int]]:
     """Return list of (key, etag, vectors_for_doc_id, vectors_for_doc_id_and_etag)."""
-    contents = get_s3_bucket_contents(settings.AWS_S3_RAG_DOCUMENTS_BUCKET)
+    contents = await asyncio.to_thread(
+        get_s3_bucket_contents, settings.AWS_S3_RAG_DOCUMENTS_BUCKET
+    )
     service = get_pinecone_service()
     results: list[tuple[str, str, int, int]] = []
     for obj in contents:
         key = obj["Key"]
         etag = obj.get("ETag", "").strip('"')
-        c_doc, c_both = service.get_vector_counts(key, etag)
+        c_doc, c_both = await asyncio.to_thread(service.get_vector_counts, key, etag)
         results.append((key, etag, c_doc, c_both))
     return results
 
@@ -107,27 +116,29 @@ async def upload_document(
     if not resolved_key:
         raise HTTPException(status_code=400, detail="A key or filename is required")
 
-    if not overwrite and object_exists_in_s3(
-        settings.AWS_S3_RAG_DOCUMENTS_BUCKET, resolved_key
-    ):
+    exists = await asyncio.to_thread(
+        object_exists_in_s3, settings.AWS_S3_RAG_DOCUMENTS_BUCKET, resolved_key
+    )
+    if not overwrite and exists:
         raise HTTPException(
             status_code=409, detail="Object already exists; use overwrite=true"
         )
 
     await file.seek(0)
-    upload_fileobj_to_s3(
+    await asyncio.to_thread(
+        upload_fileobj_to_s3,
         settings.AWS_S3_RAG_DOCUMENTS_BUCKET,
         resolved_key,
         file.file,
         content_type=file.content_type,
     )
-    document = document_from_head(resolved_key, include_url=include_url)
+    document = await asyncio.to_thread(document_from_head, resolved_key, include_url)
 
     # Keep Pinecone in sync
     try:
         if overwrite:
-            _delete_key_from_pinecone(resolved_key)
-        _ingest_key_into_pinecone(resolved_key, document.etag)
+            await asyncio.to_thread(_delete_key_from_pinecone, resolved_key)
+        await asyncio.to_thread(_ingest_key_into_pinecone, resolved_key, document.etag)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Vectorstore ingest failed: {exc}")
 
@@ -140,24 +151,27 @@ async def update_document(
     create_if_missing: bool,
     include_url: bool,
 ) -> Tuple[Document, bool]:
-    exists = object_exists_in_s3(settings.AWS_S3_RAG_DOCUMENTS_BUCKET, key)
+    exists = await asyncio.to_thread(
+        object_exists_in_s3, settings.AWS_S3_RAG_DOCUMENTS_BUCKET, key
+    )
     if not exists and not create_if_missing:
         raise HTTPException(status_code=404, detail="Object not found")
 
     await file.seek(0)
-    upload_fileobj_to_s3(
+    await asyncio.to_thread(
+        upload_fileobj_to_s3,
         settings.AWS_S3_RAG_DOCUMENTS_BUCKET,
         key,
         file.file,
         content_type=file.content_type,
     )
-    document = document_from_head(key, include_url=include_url)
+    document = await asyncio.to_thread(document_from_head, key, include_url)
     created = not exists
 
     # Replace vectors for this doc
     try:
-        _delete_key_from_pinecone(key)
-        _ingest_key_into_pinecone(key, document.etag)
+        await asyncio.to_thread(_delete_key_from_pinecone, key)
+        await asyncio.to_thread(_ingest_key_into_pinecone, key, document.etag)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Vectorstore update failed: {exc}")
 
@@ -175,3 +189,73 @@ def delete_document(key: str) -> DeleteResult:
     except Exception:
         pass
     return DeleteResult(key=key, deleted=bool(deleted))
+
+
+async def sync_documents() -> dict:
+    """Synchronize S3 documents with Pinecone vectorstore.
+
+    Returns a dictionary with sync statistics including counts for synced, added, updated, and deleted documents.
+    """
+    from src.app.features.documents.schemas import SyncResult
+
+    # Get all S3 documents
+    s3_contents = await asyncio.to_thread(
+        get_s3_bucket_contents, settings.AWS_S3_RAG_DOCUMENTS_BUCKET
+    )
+    s3_keys = {obj["Key"] for obj in s3_contents}
+
+    # Get all indexed Pinecone documents
+    pinecone_service = get_pinecone_service()
+    pinecone_doc_ids = set(
+        await asyncio.to_thread(pinecone_service.get_all_indexed_doc_ids)
+    )
+
+    # Initialize counters
+    synced = 0
+    added = 0
+    updated = 0
+    deleted = 0
+    errors = []
+
+    # Process S3 documents
+    for obj in s3_contents:
+        key = obj["Key"]
+        etag = obj.get("ETag", "").strip('"')
+
+        try:
+            # Check sync status
+            status, _, _, _ = await get_document_sync_status(key)
+
+            if status == "not_indexed":
+                # Document not in Pinecone, add it
+                await asyncio.to_thread(_ingest_key_into_pinecone, key, etag)
+                added += 1
+            elif status == "stale":
+                # Document exists but etag changed, update it
+                await asyncio.to_thread(_delete_key_from_pinecone, key)
+                await asyncio.to_thread(_ingest_key_into_pinecone, key, etag)
+                updated += 1
+            elif status == "in_sync":
+                # Document is already synced
+                synced += 1
+        except Exception as e:
+            errors.append(f"Error processing {key}: {str(e)}")
+
+    # Remove orphaned vectors (in Pinecone but not in S3)
+    orphaned_doc_ids = pinecone_doc_ids - s3_keys
+    for doc_id in orphaned_doc_ids:
+        try:
+            await asyncio.to_thread(_delete_key_from_pinecone, doc_id)
+            deleted += 1
+        except Exception as e:
+            errors.append(f"Error deleting orphaned {doc_id}: {str(e)}")
+
+    return {
+        "total_s3_documents": len(s3_keys),
+        "total_pinecone_documents": len(pinecone_doc_ids),
+        "synced": synced,
+        "added": added,
+        "updated": updated,
+        "deleted": deleted,
+        "errors": errors,
+    }

@@ -158,6 +158,13 @@ def answer_correctness_evaluator(run: Run, example: Example):
 
     actual_output = str(run.outputs.get("output", "")).strip()  # Now a clean string
     expected_generation_output = example.outputs.get("expected_generation_output")
+    # --- DEBUG: Inspect evaluator inputs ---
+    try:
+        print(
+            f"DEBUG: answer_correctness inputs: expected_len={len(str(expected_generation_output or ''))} actual_len={len(actual_output)}"
+        )
+    except Exception:
+        pass
 
     # We can use SummarizationMetric to check for semantic overlap and factual consistency.
     metric = SummarizationMetric(threshold=MIN_SCORE_THRESHOLD, model=DEEPEVAL_MODEL)
@@ -167,22 +174,16 @@ def answer_correctness_evaluator(run: Run, example: Example):
         expected_output=str(expected_generation_output),
     )
     metric.measure(test_case)
+    # --- DEBUG: Inspect evaluator result ---
+    try:
+        _reason_prev = (metric.reason or "")[:200].replace("\n", " ")
+        print(
+            f"DEBUG: answer_correctness score={metric.score} reason_preview={_reason_prev}"
+        )
+    except Exception:
+        pass
     return {
         "key": "answer_correctness",
-        "score": metric.score,
-        "reason": metric.reason,
-    }
-
-
-def contextual_recall_evaluator(run: Run, example: Example):
-    test_case = _create_test_case(run, example)
-    if not test_case:
-        return {"score": 0, "reason": "Run had no outputs"}
-
-    metric = ContextualRecallMetric(threshold=MIN_SCORE_THRESHOLD, model=DEEPEVAL_MODEL)
-    metric.measure(test_case)
-    return {
-        "key": "contextual_recall",
         "score": metric.score,
         "reason": metric.reason,
     }
@@ -193,12 +194,78 @@ def contextual_relevancy_evaluator(run: Run, example: Example):
     if not test_case:
         return {"score": 0, "reason": "Run had no outputs"}
 
+    # --- DEBUG: Inspect evaluator inputs ---
+    try:
+        _ctx_count = len(test_case.context or [])
+        _ret_count = len(test_case.retrieval_context or [])
+        _ctx_prev = (
+            str(test_case.context[0])[:200].replace("\n", " ") if _ctx_count else ""
+        )
+        _ret_prev = (
+            str(test_case.retrieval_context[0])[:200].replace("\n", " ")
+            if _ret_count
+            else ""
+        )
+        print(
+            f"DEBUG: contextual_relevancy inputs: expected_items={_ctx_count} retrieved_items={_ret_count} expected_preview={_ctx_prev} retrieved_preview={_ret_prev}"
+        )
+    except Exception:
+        pass
+
     metric = ContextualRelevancyMetric(
         threshold=MIN_SCORE_THRESHOLD, model=DEEPEVAL_MODEL
     )
     metric.measure(test_case)
+    # --- DEBUG: Inspect evaluator result ---
+    try:
+        _reason_prev = (metric.reason or "")[:200].replace("\n", " ")
+        print(
+            f"DEBUG: contextual_relevancy score={metric.score} reason_preview={_reason_prev}"
+        )
+    except Exception:
+        pass
     return {
         "key": "contextual_relevancy",
+        "score": metric.score,
+        "reason": metric.reason,
+    }
+
+
+def retrieval_recall_evaluator(run: Run, example: Example):
+    test_case = _create_test_case(run, example)
+    if not test_case:
+        return {"score": 0, "reason": "Run had no outputs"}
+
+    # --- DEBUG: Inspect evaluator inputs ---
+    try:
+        _ctx_count = len(test_case.context or [])
+        _ret_count = len(test_case.retrieval_context or [])
+        _ctx_prev = (
+            str(test_case.context[0])[:200].replace("\n", " ") if _ctx_count else ""
+        )
+        _ret_prev = (
+            str(test_case.retrieval_context[0])[:200].replace("\n", " ")
+            if _ret_count
+            else ""
+        )
+        print(
+            f"DEBUG: retrieval_recall inputs: expected_items={_ctx_count} retrieved_items={_ret_count} expected_preview={_ctx_prev} retrieved_preview={_ret_prev}"
+        )
+    except Exception:
+        pass
+
+    metric = ContextualRecallMetric(threshold=MIN_SCORE_THRESHOLD, model=DEEPEVAL_MODEL)
+    metric.measure(test_case)
+    # --- DEBUG: Inspect evaluator result ---
+    try:
+        _reason_prev = (metric.reason or "")[:200].replace("\n", " ")
+        print(
+            f"DEBUG: retrieval_recall score={metric.score} reason_preview={_reason_prev}"
+        )
+    except Exception:
+        pass
+    return {
+        "key": "retrieval_recall",
         "score": metric.score,
         "reason": metric.reason,
     }
@@ -230,6 +297,24 @@ async def rag_system_target(example: dict):
 
     # The output of the RAG app is the entire graph state
     output_state = await app.ainvoke({"messages": [("user", question)]}, config)
+    # --- DEBUG: Inspect raw output_state and messages ---
+    print("DEBUG: output_state type:", type(output_state))
+    try:
+        print("DEBUG: output_state keys:", list(output_state.keys()))
+    except Exception as e:
+        print("DEBUG: cannot list output_state keys:", e)
+    _dbg_messages = output_state.get("messages", [])
+    print(f"DEBUG: messages count: {len(_dbg_messages)}")
+    if isinstance(_dbg_messages, list) and _dbg_messages:
+        for idx, msg in enumerate(_dbg_messages[-3:]):
+            _msg_type = getattr(msg, "type", None) or msg.__class__.__name__
+            _content = getattr(msg, "content", None)
+            _preview = (
+                str(_content)[:200].replace("\n", " ") if _content is not None else ""
+            )
+            print(
+                f"DEBUG: message[{len(_dbg_messages)-min(3,len(_dbg_messages))+idx}] type={_msg_type} preview={_preview}"
+            )
 
     # Extract the final AI-generated message
     final_answer = ""
@@ -241,22 +326,42 @@ async def rag_system_target(example: dict):
             except Exception:
                 final_answer = str(messages[-1])
     final_answer = str(final_answer).strip()
+    # --- DEBUG: Inspect final answer ---
+    print(
+        f"DEBUG: final_answer length: {len(final_answer)} preview: {final_answer[:200].replace('\n',' ')}"
+    )
 
     print(f"DEBUG: Final state keys: {list(output_state.keys())}")
     if "retrieved_context" in output_state:
-        print(f"DEBUG: retrieved_context type: {type(output_state["retrieved_context"])}, value: {output_state["retrieved_context"]}")
+        print(
+            f"DEBUG: retrieved_context type: {type(output_state['retrieved_context'])}, value: {output_state['retrieved_context']}"
+        )
     else:
-        print("DEBUG: retrieved_context not found in final state - checking tool messages")
+        print(
+            "DEBUG: retrieved_context not found in final state - checking tool messages"
+        )
         # Check for tool messages in the final state
         messages = output_state.get("messages", [])
-        tool_contexts = [msg.content for msg in messages if hasattr(msg, "type") and msg.type == "tool"]
+        tool_contexts = [
+            msg.content
+            for msg in messages
+            if hasattr(msg, "type") and msg.type == "tool"
+        ]
         output_state["retrieved_context"] = tool_contexts
-        print("DEBUG: retrieved_context not found in final state - checking tool messages")
+        print(
+            "DEBUG: retrieved_context not found in final state - checking tool messages"
+        )
         # Check for tool messages in the final state
         messages = output_state.get("messages", [])
-        tool_contexts = [msg.content for msg in messages if hasattr(msg, "type") and msg.type == "tool"]
+        tool_contexts = [
+            msg.content
+            for msg in messages
+            if hasattr(msg, "type") and msg.type == "tool"
+        ]
         output_state["retrieved_context"] = tool_contexts
-        print(f"DEBUG: retrieved_context type: {type(output_state["retrieved_context"])}, value: {output_state["retrieved_context"]}")
+        print(
+            f"DEBUG: retrieved_context type: {type(output_state['retrieved_context'])}, value: {output_state['retrieved_context']}"
+        )
     # Extract the retrieved context for evaluation.
     # NOTE: This assumes your graph's final state includes a 'retrieved_context' key
     # containing the retrieved documents. Your RAG agent must return this.
@@ -283,8 +388,21 @@ async def rag_system_target(example: dict):
         return str(doc_obj)
 
     retrieved_context = [_to_text(doc) for doc in raw_context]
+    # --- DEBUG: Inspect normalized retrieved context ---
+    print(f"DEBUG: retrieved_context normalized count: {len(retrieved_context)}")
+    if retrieved_context:
+        _rc_prev = str(retrieved_context[0])[:200].replace("\n", " ")
+        print(f"DEBUG: retrieved_context[0] preview: {_rc_prev}")
 
-    return {"output": final_answer, "context": retrieved_context}
+    return {
+        "output": final_answer,
+        "llm_output": final_answer,
+        "answer": final_answer,
+        "output_preview": final_answer[:200],
+        "context": retrieved_context,
+        "retrieved_context_count": len(retrieved_context),
+        "retrieved_context_preview": retrieved_context[0] if retrieved_context else "",
+    }
 
 
 async def main():
@@ -338,7 +456,7 @@ async def main():
         evaluators=[
             faithfulness_evaluator,
             answer_relevancy_evaluator,
-            contextual_recall_evaluator,
+            retrieval_recall_evaluator,
             contextual_relevancy_evaluator,
             answer_correctness_evaluator,  # Add the new metric
         ],

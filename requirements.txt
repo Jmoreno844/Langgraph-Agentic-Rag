@@ -7,7 +7,7 @@ langchain-pinecone
 langgraph-checkpoint-postgres
 pypdf
 boto3
-unstructured
+unstructured[pdf]
 rank_bm25
 
 fastapi[standard]
@@ -26,5 +26,6 @@ tenacity>=8.1.0
 transformers>=4.11.3
 torch>=2.1.1
 
+#guardrails hub install hub://tryolabs/restricttotopic --quiet
 #guardrails hub install hub://guardrails/detect_pii
 certifi

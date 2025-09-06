@@ -58,3 +58,14 @@ class SyncStatus(BaseModel):
     vectors_for_doc_id_and_etag: int = Field(
         ..., description="Pinecone vector count for this doc_id and current etag"
     )
+
+
+
+class SyncResult(BaseModel):
+    total_s3_documents: int
+    total_pinecone_documents: int
+    synced: int
+    added: int
+    updated: int
+    deleted: int
+    errors: List[str]

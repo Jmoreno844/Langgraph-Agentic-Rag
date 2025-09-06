@@ -162,6 +162,51 @@ class PineconeVectorStoreService:
         except Exception:
             return 0, 0
 
+    def get_all_indexed_doc_ids(self) -> list[str]:
+        """Get all unique doc_ids currently indexed in Pinecone.
+
+        Uses list() + fetch() with client-side metadata extraction to support
+        serverless/starter indexes consistently.
+        """
+        try:
+            from pinecone import Pinecone
+
+            pc = Pinecone(api_key=settings.PINECONE_API_KEY)
+            index = pc.Index(settings.PINECONE_INDEX)
+
+            # 1) Collect all vector IDs in the default namespace
+            vector_ids: list[str] = []
+            try:
+                for vec in index.list(namespace=""):
+                    vid = vec.get("id") if isinstance(vec, dict) else vec
+                    if isinstance(vid, str):
+                        vector_ids.append(vid)
+            except Exception:
+                # If list fails for any reason, return empty (best effort)
+                return []
+
+            # 2) Fetch in batches and extract doc_id from metadata
+            doc_ids: set[str] = set()
+            for i in range(0, len(vector_ids), 100):
+                batch = vector_ids[i : i + 100]
+                try:
+                    resp = index.fetch(ids=batch, namespace="")
+                except Exception:
+                    continue
+                vectors = resp.get("vectors", {}) if isinstance(resp, dict) else {}
+                for v in vectors.values():
+                    meta = v.get("metadata") if isinstance(v, dict) else None
+                    if not isinstance(meta, dict):
+                        continue
+                    doc_id = meta.get("doc_id")
+                    if isinstance(doc_id, str) and doc_id:
+                        doc_ids.add(doc_id)
+
+            return list(doc_ids)
+        except Exception as e:
+            print(f"Error getting indexed doc_ids: {e}")
+            return []
+
     def get_sync_status(self, doc_id: str, etag: Optional[str]) -> str:
         """Compute a simple sync status label based on counts.
 

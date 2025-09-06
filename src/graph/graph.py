@@ -12,7 +12,7 @@ from src.graph.tools.hybrid_retriever import retriever_tool
 from src.graph.tools.query_products import query_products_tool
 from src.graph.tools.list_product_categories import list_product_categories_tool
 from src.graph.state import CustomMessagesState
-from graph.guardrails.topic_restriction import topic_guardrail
+from src.graph.guardrails.topic_restriction import topic_guardrail
 from src.graph.nodes.guardrail_response import guardrail_response
 from src.graph.routing.source_router import source_router
 

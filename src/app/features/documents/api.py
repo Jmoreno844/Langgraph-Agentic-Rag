@@ -9,8 +9,14 @@ from fastapi import (
     Response,
 )
 from typing import Optional
-from src.app.features.documents.schemas import Document, DeleteResult, SyncStatus
+from src.app.features.documents.schemas import (
+    Document,
+    DeleteResult,
+    SyncStatus,
+    SyncResult,
+)
 from .service import (
+    sync_documents as svc_sync_documents,
     list_documents as svc_list_documents,
     upload_document as svc_upload_document,
     update_document as svc_update_document,
@@ -63,7 +69,7 @@ async def get_document_sync(
     - stale: vectors exist for doc_id, but none match the current etag
     - not_indexed: no vectors exist for doc_id
     """
-    status, count_doc, count_both, etag = svc_get_sync_status(key)
+    status, count_doc, count_both, etag = await svc_get_sync_status(key)
     return SyncStatus(
         key=key,
         etag=etag,
@@ -85,7 +91,7 @@ async def list_documents_sync():
     This performs a Pinecone stats check per object, so call volume scales with number of items.
     """
     statuses = []
-    for key, etag, count_doc, count_both in svc_list_sync_statuses():
+    for key, etag, count_doc, count_both in await svc_list_sync_statuses():
         from src.services.vectorstores.pinecone_service import get_pinecone_service
 
         status = get_pinecone_service().get_sync_status(key, etag)
@@ -99,6 +105,27 @@ async def list_documents_sync():
             )
         )
     return statuses
+
+
+@router.post(
+    "/documents/sync",
+    response_model=SyncResult,
+    summary="Synchronize S3 documents with Pinecone vectorstore",
+    tags=["documents"],
+)
+async def sync_documents():
+    """Synchronize all S3 documents with the Pinecone vectorstore.
+
+    This endpoint compares S3 documents with Pinecone vectors and performs the following operations:
+    - Adds documents that exist in S3 but not in Pinecone
+    - Updates documents where the ETag has changed (indicating content modification)
+    - Deletes orphaned vectors for documents that exist in Pinecone but not in S3
+    - Leaves already synchronized documents unchanged
+
+    Returns statistics about the sync operation including counts of synced, added, updated, and deleted documents.
+    """
+    result = await svc_sync_documents()
+    return SyncResult(**result)
 
 
 @router.post(

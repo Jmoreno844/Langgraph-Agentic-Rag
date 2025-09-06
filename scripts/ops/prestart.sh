@@ -1,6 +1,11 @@
 #!/usr/bin/env sh
 set -eu
 
+# Install Guardrails Hub validators
+echo "[prestart] Installing Guardrails Hub validators..."
+guardrails hub install hub://tryolabs/restricttotopic --quiet || echo "[prestart] restricttotopic already installed"
+guardrails hub install hub://guardrails/detect_pii --quiet || echo "[prestart] detect_pii already installed"
+
 # Only run if enabled and alembic.ini exists
 RUN_DB_MIGRATIONS="${RUN_DB_MIGRATIONS:-true}"
 if [ "$RUN_DB_MIGRATIONS" = "true" ] && [ -f "alembic.ini" ]; then
@@ -15,4 +20,4 @@ if [ "$RUN_DB_MIGRATIONS" = "true" ] && [ -f "alembic.ini" ]; then
   fi
 else
   echo "[prestart] Skipping migrations (RUN_DB_MIGRATIONS=$RUN_DB_MIGRATIONS, alembic.ini present=$( [ -f alembic.ini ] && echo yes || echo no ))"
-fi 
+fi

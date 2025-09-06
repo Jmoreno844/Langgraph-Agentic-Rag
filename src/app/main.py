@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from src.graph.runtime import build_app, cleanup
 from src.app.features.documents.api import router as documents_router
 from src.app.features.products.api import router as products_router
+from src.app.core.guardrails_setup import initialize_guardrails
 
 
 class ChatRequest(BaseModel):
@@ -15,6 +16,8 @@ class ChatRequest(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await initialize_guardrails()
+
     app.state.graph_app = build_app()
     yield
     # Clean up database connection on shutdown
