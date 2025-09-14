@@ -94,8 +94,8 @@ def _write_rows(dst_csv: Path, rows: List[Dict[str, str]], fieldnames: List[str]
 
 
 def augment_dataset(
-    src_path: str = "./evals/synthetic_datasetcsv",
-    dst_path: str = "./evals/synthetic_dataset_slices.csv",
+    src_path: str = "./tests/evals/data/synthetic_dataset.csv",
+    dst_path: str = "./tests/evals/data/synthetic_dataset_slices.csv",
     model_name: str | None = None,
     limit: int | None = None,
 ):
@@ -173,8 +173,8 @@ def augment_dataset(
 
 if __name__ == "__main__":
     # Simple CLI via env vars; modify as needed
-    src = os.getenv("AUGMENT_SRC", "./evals/synthetic_dataset.csv")
-    dst = os.getenv("AUGMENT_DST", "./evals/synthetic_dataset_slices.csv")
+    src = os.getenv("AUGMENT_SRC", "./tests/evals/data/synthetic_dataset.csv")
+    dst = os.getenv("AUGMENT_DST", "./tests/evals/data/synthetic_dataset_slices.csv")
     model = os.getenv("AUGMENT_MODEL", None)
     lim = os.getenv("AUGMENT_LIMIT", None)
     augment_dataset(

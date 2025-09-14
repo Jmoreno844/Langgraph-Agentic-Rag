@@ -45,28 +45,23 @@ def generate():
     )
     print(f"✅ Generated {len(goldens)} initial goldens.")
 
-    # Convert Golden objects to dictionaries and rename keys for the new schema.
-    # We can't add attributes to the Pydantic 'Golden' model directly.
+    # Convert Golden objects to dictionaries and rename keys for the test schema.
     processed_goldens = []
     for g in goldens:
-        # .model_dump() is the Pydantic v2 way to get a dict
         golden_dict = g.model_dump()
         processed_goldens.append(
             {
                 "input": golden_dict.get("input"),
-                "expected_generation_output": golden_dict.get("expected_output"),
-                "expected_retrieval_context": golden_dict.get("context"),
-                "source_file": golden_dict.get(
-                    "source_file"
-                ),  # Ensure this is carried over
+                "expected_output": golden_dict.get("expected_output"),
+                "context": golden_dict.get("context"),
+                "source_file": golden_dict.get("source_file"),
             }
         )
 
     # Manually write to CSV to control column names
-    output_path = "./evals"
-    output_file = "synthetic_dataset.csv"
-    os.makedirs(output_path, exist_ok=True)
-    full_path = os.path.join(output_path, output_file)
+    output_dir = Path("./tests/evals/data")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_file = output_dir / "synthetic_dataset.csv"
 
     if not processed_goldens:
         print("⚠️ No goldens generated, skipping CSV write.")
@@ -74,13 +69,13 @@ def generate():
 
     # Use the keys from the first dictionary as headers
     fieldnames = processed_goldens[0].keys()
-    with open(full_path, "w", newline="", encoding="utf-8") as f:
+    with output_file.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(processed_goldens)
 
     print(f"\n✅ Synthetic dataset generated successfully!")
-    print(f"📂 Saved to {full_path}")
+    print(f"📂 Saved to {output_file}")
     print(f"📈 Dataset contains {len(processed_goldens)} goldens.")
 
 

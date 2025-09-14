@@ -20,6 +20,37 @@ The synthetic dataset CSV has the following columns:
 - `retrieval_context` - Filled by tests (documents your system retrieved)
 - `source_file` - Which document the test case came from
 
+## Scripts
+
+- Generate base dataset from `tests/data/*.txt`:
+
+  ```bash
+  source .venv/bin/activate
+  python scripts/evals/generate_goldens.py
+  # writes to tests/evals/data/synthetic_dataset.csv
+  ```
+
+- Create augmented slices (canonical, humanized, challenging):
+
+  ```bash
+  source .venv/bin/activate
+  export AUGMENT_SRC=./tests/evals/data/synthetic_dataset.csv
+  export AUGMENT_DST=./tests/evals/data/synthetic_dataset_slices.csv
+  python scripts/evals/augment_slices.py
+  ```
+
+- Run LangSmith experiment (optional, cloud eval):
+  ```bash
+  source .venv/bin/activate
+  export LANGSMITH_API_KEY=...
+  export LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+  export LANGSMITH_PROJECT=Your Project Name
+  export OPENAI_API_KEY=...
+  # optionally limit number of examples
+  export EVAL_LIMIT=10
+  python scripts/evals/run_langsmith_experiment.py
+  ```
+
 ## Running Evaluations
 
 ### Quick Verification (Recommended First)
@@ -69,7 +100,9 @@ The evaluation measures the RAG triad plus additional metrics:
 4. **Contextual Relevancy** - Are the retrieved documents actually relevant?
 
 ## Configuration
+
 - **Test Limit**: `DEEPEVAL_TEST_LIMIT` (default: 2 for mock, 3 for real graph)
+
   - Controls how many test cases to run from the dataset
   - Set to a higher number to run more tests, or `None` to run all
 
@@ -83,7 +116,7 @@ The evaluation measures the RAG triad plus additional metrics:
    ```bash
    source .venv/bin/activate
    export DEEPEVAL_SYNTH_MODEL=gpt-4o-mini
-   python scripts/generate_eval_dataset.py
+   python scripts/evals/generate_goldens.py
    # Output will be at tests/evals/data/synthetic_dataset.csv
    ```
 2. **Database connection issues**

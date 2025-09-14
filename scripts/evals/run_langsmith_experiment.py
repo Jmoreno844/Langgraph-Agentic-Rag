@@ -78,8 +78,12 @@ def _create_test_case(run: Run, example: Example) -> LLMTestCase | None:
     question = example.inputs["input"]
 
     # Ground truth data from our new v2 dataset schema
-    expected_generation_output = example.outputs["expected_generation_output"]
-    expected_retrieval_context = example.outputs["expected_retrieval_context"]
+    expected_generation_output = example.outputs.get(
+        "expected_generation_output"
+    ) or example.outputs.get("expected_output")
+    expected_retrieval_context = example.outputs.get(
+        "expected_retrieval_context"
+    ) or example.outputs.get("context")
     if isinstance(expected_retrieval_context, str):
         parsed_list = None
         try:
@@ -157,7 +161,9 @@ def answer_correctness_evaluator(run: Run, example: Example):
         return {"score": 0, "reason": "Missing output or example data"}
 
     actual_output = str(run.outputs.get("output", "")).strip()  # Now a clean string
-    expected_generation_output = example.outputs.get("expected_generation_output")
+    expected_generation_output = example.outputs.get(
+        "expected_generation_output"
+    ) or example.outputs.get("expected_output")
     # --- DEBUG: Inspect evaluator inputs ---
     try:
         print(
@@ -418,7 +424,7 @@ async def main():
         print("Please upload it first or correct the LANGSMITH_DATASET_NAME constant.")
         return
 
-    # --- New: Add ability to limit test rows via environment variable ---
+    # --- Ability to limit test rows via env var EVAL_LIMIT ---
     try:
         limit_str = os.getenv("EVAL_LIMIT")
         limit = int(limit_str) if limit_str else None
