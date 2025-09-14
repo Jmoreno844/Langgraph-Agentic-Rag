@@ -29,7 +29,7 @@ MIN_SCORE_THRESHOLD = 0.7  # Minimum score for tests to pass
 DATASET_PATH = Path("tests/evals/data/synthetic_dataset.csv")
 
 
-def load_evaluation_dataset():
+def load_evaluation_dataset(limit: int = None):
     """Load the synthetic evaluation dataset from CSV"""
     if not DATASET_PATH.exists():
         pytest.skip(
@@ -55,7 +55,7 @@ def load_evaluation_dataset():
             }
         )
 
-    return test_cases
+    return test_cases[:limit] if limit else test_cases
 
 
 def get_mock_graph_app():

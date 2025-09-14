@@ -71,7 +71,7 @@ def load_rows(limit: int | None = 3):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("row", load_rows(3))
+@pytest.mark.parametrize("row", load_rows(int(os.getenv("DEEPEVAL_TEST_LIMIT", 3))))
 async def test_real_graph_rag(row):
     # Build local retriever from tests/data
     data_dir = Path("tests/data")

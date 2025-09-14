@@ -34,6 +34,9 @@ python scripts/test_rag_quick.py
 ```bash
 source .venv/bin/activate
 pytest tests/evals/test_rag_evaluation.py -v
+# Run with custom test limit
+export DEEPEVAL_TEST_LIMIT=5
+pytest tests/evals/test_rag_evaluation.py -v
 ```
 
 ### Full Test Suite (Real Graph)
@@ -48,6 +51,9 @@ pytest tests/evals/test_rag_real_graph.py -v
 ```bash
 # Run all but show shorter tracebacks
 pytest tests/evals/test_rag_evaluation.py -v --tb=short
+# Run with custom test limit
+export DEEPEVAL_TEST_LIMIT=5
+pytest tests/evals/test_rag_evaluation.py -v
 
 # Focus on specific metric logic using -k if needed, e.g.
 pytest tests/evals/test_rag_evaluation.py::test_rag_evaluation -k "faithfulness" -v
@@ -63,6 +69,9 @@ The evaluation measures the RAG triad plus additional metrics:
 4. **Contextual Relevancy** - Are the retrieved documents actually relevant?
 
 ## Configuration
+- **Test Limit**: `DEEPEVAL_TEST_LIMIT` (default: 2 for mock, 3 for real graph)
+  - Controls how many test cases to run from the dataset
+  - Set to a higher number to run more tests, or `None` to run all
 
 - **Minimum Score Threshold**: 0.7 (configurable in the tests)
 - **Model**: `gpt-4o-mini` (configurable via `DEEPEVAL_SYNTH_MODEL` env var)
