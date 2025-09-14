@@ -155,32 +155,30 @@ from deepeval.metrics import SummarizationMetric
 
 def answer_correctness_evaluator(run: Run, example: Example):
     """
-    Compares the generated answer against the ground truth answer for semantic similarity.
+    Compare generated answer to ground-truth reference by treating the reference
+    answer as the sole trusted context and measuring faithfulness.
     """
     if not run.outputs or not example.outputs:
         return {"score": 0, "reason": "Missing output or example data"}
 
-    actual_output = str(run.outputs.get("output", "")).strip()  # Now a clean string
-    expected_generation_output = example.outputs.get(
-        "expected_generation_output"
-    ) or example.outputs.get("expected_output")
-    # --- DEBUG: Inspect evaluator inputs ---
-    try:
-        print(
-            f"DEBUG: answer_correctness inputs: expected_len={len(str(expected_generation_output or ''))} actual_len={len(actual_output)}"
-        )
-    except Exception:
-        pass
-
-    # We can use SummarizationMetric to check for semantic overlap and factual consistency.
-    metric = SummarizationMetric(threshold=MIN_SCORE_THRESHOLD, model=DEEPEVAL_MODEL)
-    test_case = LLMTestCase(
-        input=example.inputs["input"],
-        actual_output=str(actual_output),
-        expected_output=str(expected_generation_output),
+    actual_output = str(run.outputs.get("output", "")).strip()
+    reference_answer = (
+        example.outputs.get("expected_generation_output")
+        or example.outputs.get("expected_output")
+        or ""
     )
+
+    test_case = LLMTestCase(
+        input=example.inputs.get("input", ""),
+        actual_output=str(actual_output),
+        expected_output=str(reference_answer),
+        retrieval_context=[str(reference_answer)],
+        context=[str(reference_answer)],
+    )
+
+    metric = FaithfulnessMetric(threshold=MIN_SCORE_THRESHOLD, model=DEEPEVAL_MODEL)
     metric.measure(test_case)
-    # --- DEBUG: Inspect evaluator result ---
+
     try:
         _reason_prev = (metric.reason or "")[:200].replace("\n", " ")
         print(
@@ -188,6 +186,7 @@ def answer_correctness_evaluator(run: Run, example: Example):
         )
     except Exception:
         pass
+
     return {
         "key": "answer_correctness",
         "score": metric.score,
@@ -415,6 +414,18 @@ async def main():
     """
     The main function to run the evaluation experiment.
     """
+    # --- Ability to limit test rows via env var EVAL_LIMIT ---
+    try:
+        limit_str = os.getenv("EVAL_LIMIT")
+        limit = int(limit_str) if limit_str else None
+        if limit:
+            print(f"🔬 Using EVAL_LIMIT: Running on up to {limit} examples.")
+        else:
+            print("🔬 No EVAL_LIMIT set. Running on the full dataset.")
+    except (ValueError, TypeError):
+        limit = None
+        print("⚠️ Invalid value for EVAL_LIMIT. Running on full dataset.")
+
     client = Client()
     # Check if the dataset exists
     if not client.has_dataset(dataset_name=LANGSMITH_DATASET_NAME):
@@ -424,17 +435,9 @@ async def main():
         print("Please upload it first or correct the LANGSMITH_DATASET_NAME constant.")
         return
 
-    # --- Ability to limit test rows via env var EVAL_LIMIT ---
-    try:
-        limit_str = os.getenv("EVAL_LIMIT")
-        limit = int(limit_str) if limit_str else None
-    except (ValueError, TypeError):
-        limit = None
-        print("⚠️ Invalid value for EVAL_LIMIT. Running on full dataset.")
-
     dataset_or_examples = LANGSMITH_DATASET_NAME
     if limit and limit > 0:
-        print(f"🔬 Limiting evaluation to {limit} example(s).")
+        # We already printed the limit, so no need for another print here.
         examples_iterator = client.list_examples(
             dataset_name=LANGSMITH_DATASET_NAME, limit=limit, offset=0
         )
@@ -467,7 +470,7 @@ async def main():
             answer_correctness_evaluator,  # Add the new metric
         ],
         experiment_prefix="RAG E2E Eval V2 - DeepEval",
-        max_concurrency=4,  # Adjust based on your machine and API rate limits
+        max_concurrency=10,  # Adjust based on your machine and API rate limits
     )
     print("\n✅ Evaluation experiment complete!")
     print("👉 View results in LangSmith:")

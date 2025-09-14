@@ -1,145 +1,112 @@
 # RAG Evaluation Guide
 
-This directory contains the evaluation setup for your LangGraph RAG system using DeepEval.
+This guide explains how to use the evaluation suite to measure and improve the performance of your RAG system. It is designed for both quick local checks and comprehensive cloud-based experiments.
 
-## Structure
+## Evaluation Workflow
 
-- `data/synthetic_dataset.csv` - Generated evaluation dataset
-- `test_rag_evaluation.py` - Mock-graph evaluation (fast, hermetic)
-- `test_rag_real_graph.py` - Real-graph evaluation (uses actual graph with a local BM25 retriever)
-- `../../scripts/test_rag_quick.py` - Quick verification script
+Follow these steps to evaluate your RAG application.
 
-## Dataset
+### Step 1: Generate a Baseline Dataset
 
-The synthetic dataset CSV has the following columns:
+First, you need a dataset of questions and answers derived from your source documents. This script creates it for you.
 
-- `input` - The question to ask the RAG system
-- `expected_output` - The ideal answer (ground truth)
-- `context` - The ground truth context that should be retrieved
-- `actual_output` - Filled by tests (what your system actually answered)
-- `retrieval_context` - Filled by tests (documents your system retrieved)
-- `source_file` - Which document the test case came from
-
-## Scripts
-
-- Generate base dataset from `tests/data/*.txt`:
-
-  ```bash
-  source .venv/bin/activate
-  python scripts/evals/generate_goldens.py
-  # writes to tests/evals/data/synthetic_dataset.csv
-  ```
-
-- Create augmented slices (canonical, humanized, challenging):
-
-  ```bash
-  source .venv/bin/activate
-  export AUGMENT_SRC=./tests/evals/data/synthetic_dataset.csv
-  export AUGMENT_DST=./tests/evals/data/synthetic_dataset_slices.csv
-  python scripts/evals/augment_slices.py
-  ```
-
-- Run LangSmith experiment (optional, cloud eval):
-  ```bash
-  source .venv/bin/activate
-  export LANGSMITH_API_KEY=...
-  export LANGSMITH_ENDPOINT=https://api.smith.langchain.com
-  export LANGSMITH_PROJECT=Your Project Name
-  export OPENAI_API_KEY=...
-  # optionally limit number of examples
-  export EVAL_LIMIT=10
-  python scripts/evals/run_langsmith_experiment.py
-  ```
-
-## Running Evaluations
-
-### Quick Verification (Recommended First)
+- **What it does**: Reads all `.txt` files in `tests/data`, generates question/answer pairs using an LLM, and saves them to a CSV file.
+- **When to run it**: Run this once to create your initial `synthetic_dataset.csv`. Re-run it whenever you significantly change the documents in `tests/data`.
 
 ```bash
+# Ensure your OPENAI_API_KEY is set in .env
 source .venv/bin/activate
-python scripts/test_rag_quick.py
+
+# Optional: Specify the model for generation (defaults to gpt-4o-mini)
+export DEEPEVAL_SYNTH_MODEL=gpt-4o-mini
+
+python scripts/evals/generate_goldens.py
 ```
 
-### Full Test Suite (Mock Graph)
+- **Output**: `tests/evals/data/synthetic_dataset.csv`
+
+---
+
+### Step 2: Run Local Tests (Fast Feedback)
+
+These local tests run quickly and are perfect for getting fast feedback during development without relying on external services like LangSmith.
+
+#### A) Mock Graph Test (Quick & Isolated)
+
+- **What it does**: Tests the RAG metrics (Faithfulness, Relevancy, etc.) against a _mock_ graph. This test does not run your actual RAG agent but uses a simplified, predictable stand-in.
+- **When to run it**: Use this for CI or as a quick sanity check to ensure the evaluation logic and metrics are working correctly.
 
 ```bash
 source .venv/bin/activate
 pytest tests/evals/test_rag_evaluation.py -v
-# Run with custom test limit
-export DEEPEVAL_TEST_LIMIT=5
-pytest tests/evals/test_rag_evaluation.py -v
 ```
 
-### Full Test Suite (Real Graph)
+#### B) Real Graph Test (End-to-End Local Check)
+
+- **What it does**: Tests the full RAG agent end-to-end, but replaces the Pinecone vector store with a simple, local `BM25Retriever`.
+- **When to run it**: This is the most important local test. Run it after making changes to your graph logic to see how it impacts performance before deploying or running expensive cloud evaluations.
 
 ```bash
 source .venv/bin/activate
+
+# Run on the first 3 test cases by default
+pytest tests/evals/test_rag_real_graph.py -v
+
+# Run on the first 10 test cases
+export DEEPEVAL_TEST_LIMIT=10
 pytest tests/evals/test_rag_real_graph.py -v
 ```
 
-### Run Specific Metrics
+---
+
+### Step 3 (Optional): Augment Dataset for Robustness Testing
+
+To understand how your RAG system handles different user phrasing, you can create an "augmented" version of your dataset.
+
+- **What it does**: Takes the baseline dataset and creates three versions ("slices") of each question: the original (`canonical`), a more conversational version (`humanized`), and a slightly harder version (`challenging`).
+- **When to run it**: Run this when you want to perform more rigorous testing to see how robust your system is to variations in user input. This is often done before a major release or after significant changes to the retrieval or question-rewriting logic.
 
 ```bash
-# Run all but show shorter tracebacks
-pytest tests/evals/test_rag_evaluation.py -v --tb=short
-# Run with custom test limit
-export DEEPEVAL_TEST_LIMIT=5
-pytest tests/evals/test_rag_evaluation.py -v
-
-# Focus on specific metric logic using -k if needed, e.g.
-pytest tests/evals/test_rag_evaluation.py::test_rag_evaluation -k "faithfulness" -v
+source .venv/bin/activate
+python scripts/evals/augment_slices.py
 ```
 
-## Metrics Evaluated
+- **Output**: `tests/evals/data/synthetic_dataset_slices.csv`
 
-The evaluation measures the RAG triad plus additional metrics:
+---
 
-1. **Faithfulness** - Does the answer stick to facts from retrieved context?
-2. **Answer Relevancy** - Is the answer relevant to the original question?
-3. **Contextual Recall** - Did the system retrieve all relevant documents?
-4. **Contextual Relevancy** - Are the retrieved documents actually relevant?
+### Step 4 (Optional): Run Full Experiment in LangSmith (Cloud Evaluation)
 
-## Configuration
+For the most comprehensive and shareable results, you can run the evaluation against the LangSmith platform.
 
-- **Test Limit**: `DEEPEVAL_TEST_LIMIT` (default: 2 for mock, 3 for real graph)
+- **What it does**: Uploads the augmented dataset to LangSmith (you must do this manually first), then runs your full RAG agent against each test case and logs the results, traces, and metric scores to your LangSmith project.
+- **When to run it**: Use this to benchmark major versions of your agent, compare different prompts or models, and share detailed results with your team.
 
-  - Controls how many test cases to run from the dataset
-  - Set to a higher number to run more tests, or `None` to run all
+```bash
+source .venv/bin/activate
 
-- **Minimum Score Threshold**: 0.7 (configurable in the tests)
-- **Model**: `gpt-4o-mini` (configurable via `DEEPEVAL_SYNTH_MODEL` env var)
-- **Test Cases**: Typically 32 entries generated from your documents
+# Set up your LangSmith credentials
+export LANGSMITH_API_KEY=...
+export LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+export LANGSMITH_PROJECT="Your-Project-Name"
+export OPENAI_API_KEY=...
 
-## Troubleshooting
+# Run the experiment on the first 10 examples from your LangSmith dataset
+export EVAL_LIMIT=10
+python scripts/evals/run_langsmith_experiment.py
+```
 
-1. **Dataset not found**
-   ```bash
-   source .venv/bin/activate
-   export DEEPEVAL_SYNTH_MODEL=gpt-4o-mini
-   python scripts/evals/generate_goldens.py
-   # Output will be at tests/evals/data/synthetic_dataset.csv
-   ```
-2. **Database connection issues**
-   - Ensure your `.env` file has correct `AWS_DB_URL`
-   - Make sure the database is running
-3. **OpenAI API issues**
-   - Check your `OPENAI_API_KEY` in `.env`
-   - Ensure you have sufficient API credits
-4. **Model not supported errors**
-   - Use `gpt-4o-mini` or `gpt-4` for evaluation
-   - Set via: `export DEEPEVAL_SYNTH_MODEL=gpt-4o-mini`
+## Reference: Metrics Evaluated
 
-## Interpreting Results
+All tests measure the core "RAG Triad" plus contextual relevance:
 
-- **Scores ≥ 0.7**: Generally acceptable performance
-- **Faithfulness < 0.7**: Your system may be hallucinating
-- **Answer Relevancy < 0.7**: Answers not addressing the question properly
-- **Contextual Recall < 0.7**: Missing relevant documents
-- **Contextual Relevancy < 0.7**: Retrieving irrelevant documents
+1.  **Faithfulness**: Does the answer stick to the facts from the retrieved context? (Prevents hallucination)
+2.  **Answer Relevancy**: Is the answer relevant to the user's question?
+3.  **Contextual Recall**: Did the retriever find all the necessary information from the ground-truth context?
+4.  **Contextual Relevancy**: Is the retrieved information relevant to the question? (Prevents retrieving useless documents)
 
-## Next Steps
+## Reference: Configuration
 
-1. Run the quick test to verify everything works
-2. Run the full test suite to get baseline scores
-3. Use results to identify areas for improvement
-4. Re-run evaluations after making changes to measure improvement
+- **Test Case Limit (Local)**: Use `DEEPEVAL_TEST_LIMIT` to control how many rows from the CSV are used in `pytest`.
+- **Test Case Limit (LangSmith)**: Use `EVAL_LIMIT` to control how many examples from the LangSmith dataset are used.
+- **Evaluation Model**: Use `DEEPEVAL_SYNTH_MODEL` or `DEEPEVAL_METRIC_MODEL` to set which LLM (`gpt-4o-mini`, `gpt-4-turbo`, etc.) is used for generating data and calculating metrics.

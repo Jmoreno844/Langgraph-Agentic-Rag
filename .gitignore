@@ -4,4 +4,7 @@ venv/
 __pycache__/
 .pytest_cache/
 .langgraph_api/
-
+*.csv
+*.txt
+# AWS Certificates
+*.pem

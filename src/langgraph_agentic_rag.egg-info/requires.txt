@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-langgraph
-langchain-openai
-langchain-community
-pydantic-settings
-psycopg[binary]
