@@ -60,7 +60,6 @@ class SyncStatus(BaseModel):
     )
 
 
-
 class SyncResult(BaseModel):
     total_s3_documents: int
     total_pinecone_documents: int
@@ -69,3 +68,7 @@ class SyncResult(BaseModel):
     updated: int
     deleted: int
     errors: List[str]
+    debug: Optional[List[str]] = Field(
+        default=None,
+        description="Debug log lines emitted during sync (present when debug=true)",
+    )

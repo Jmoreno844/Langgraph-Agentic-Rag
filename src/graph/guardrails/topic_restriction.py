@@ -28,7 +28,6 @@ INVALID_TOPICS: List[str] = [
 _guard = Guard().use(
     RestrictToTopic(
         valid_topics=ALLOWED_TOPICS,
-        invalid_topics=INVALID_TOPICS,
         disable_classifier=False,
         disable_llm=True,
         on_fail="exception",

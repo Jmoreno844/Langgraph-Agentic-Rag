@@ -1,18 +1,29 @@
 # src/api/main.py
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from src.graph.runtime import build_app, cleanup, build_app_async, acleanup
-from src.app.features.documents.api import router as documents_router
+
+# Temporarily disable problematic routers
+# from src.app.features.documents.api import router as documents_router
 from src.app.features.products.api import router as products_router
+from src.app.features.documents.api import router as documents_router
 from src.app.core.guardrails_setup import initialize_guardrails
 from src.app.features.chat.api import router as chat_router
+from src.db.automigrate import apply_migrations_safely, ensure_products_table_exists
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await initialize_guardrails()
+
+    # Apply DB migrations automatically before building the app
+    apply_migrations_safely()
+    ensure_products_table_exists()
 
     # Prefer async builder (AsyncPostgresSaver) with fallback to sync
     app.state.graph_app = await build_app_async()
@@ -30,7 +41,7 @@ app.include_router(chat_router)
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Hello World - Basic server running!"}
 
 
 class ErrorResponse(Exception):

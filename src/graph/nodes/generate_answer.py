@@ -20,17 +20,19 @@ async def generate_answer(state: CustomMessagesState):
     """Generate an answer using context stored in state."""
     question = state.get("current_question", "")
     context = state.get("retrieved_context", "")
-    
+
     if not question:
         # Fallback to extracting from messages if not in state
         from .extract_context import _latest_user_content
+
         question = _latest_user_content(state["messages"])
-    
+
     if not context:
         # Fallback to extracting from messages if not in state
         from .extract_context import _extract_tool_context
+
         context = _extract_tool_context(state["messages"])
-    
+
     prompt = GENERATE_PROMPT.format(question=question, context=context)
     response = await response_model.ainvoke([{"role": "user", "content": prompt}])
     return {"messages": [response]}

@@ -191,71 +191,97 @@ def delete_document(key: str) -> DeleteResult:
     return DeleteResult(key=key, deleted=bool(deleted))
 
 
-async def sync_documents() -> dict:
+async def sync_documents(*, debug: bool = False) -> dict:
     """Synchronize S3 documents with Pinecone vectorstore.
 
     Returns a dictionary with sync statistics including counts for synced, added, updated, and deleted documents.
     """
-    from src.app.features.documents.schemas import SyncResult
+    debug_logs: list[str] = []
+    if debug:
+        print("--- Starting document sync with debug enabled ---")
 
-    # Get all S3 documents
+    # 1. Get S3 and Pinecone states in single passes
     s3_contents = await asyncio.to_thread(
         get_s3_bucket_contents, settings.AWS_S3_RAG_DOCUMENTS_BUCKET
     )
-    s3_keys = {obj["Key"] for obj in s3_contents}
+    s3_docs = {obj["Key"]: obj.get("ETag", "").strip('"') for obj in s3_contents}
 
-    # Get all indexed Pinecone documents
     pinecone_service = get_pinecone_service()
-    pinecone_doc_ids = set(
-        await asyncio.to_thread(pinecone_service.get_all_indexed_doc_ids)
-    )
+    (
+        pinecone_doc_ids,
+        doc_id_to_count,
+        doc_id_etag_to_count,
+    ) = await asyncio.to_thread(pinecone_service.compute_index_snapshot)
 
-    # Initialize counters
+    if debug:
+        debug_logs.append(f"Found {len(s3_docs)} documents in S3.")
+        debug_logs.append(f"Found {len(pinecone_doc_ids)} unique doc_ids in Pinecone.")
+
+    # 2. Compare states and determine actions
     synced = 0
     added = 0
     updated = 0
     deleted = 0
     errors = []
 
-    # Process S3 documents
-    for obj in s3_contents:
-        key = obj["Key"]
-        etag = obj.get("ETag", "").strip('"')
-
+    for key, etag in s3_docs.items():
         try:
-            # Check sync status
-            status, _, _, _ = await get_document_sync_status(key)
+            # Determine status from the snapshot
+            count_for_doc = doc_id_to_count.get(key, 0)
+            count_for_etag = doc_id_etag_to_count.get((key, etag), 0)
 
+            status = "not_indexed"
+            if count_for_doc > 0:
+                status = "in_sync" if count_for_etag > 0 else "stale"
+
+            if debug:
+                debug_logs.append(f"Doc '{key}': status={status}, etag={etag}")
+
+            # Perform actions based on status
             if status == "not_indexed":
-                # Document not in Pinecone, add it
                 await asyncio.to_thread(_ingest_key_into_pinecone, key, etag)
                 added += 1
             elif status == "stale":
-                # Document exists but etag changed, update it
                 await asyncio.to_thread(_delete_key_from_pinecone, key)
                 await asyncio.to_thread(_ingest_key_into_pinecone, key, etag)
                 updated += 1
             elif status == "in_sync":
-                # Document is already synced
                 synced += 1
         except Exception as e:
-            errors.append(f"Error processing {key}: {str(e)}")
+            error_msg = f"Error processing {key}: {str(e)}"
+            errors.append(error_msg)
+            if debug:
+                debug_logs.append(error_msg)
 
-    # Remove orphaned vectors (in Pinecone but not in S3)
-    orphaned_doc_ids = pinecone_doc_ids - s3_keys
+    # 3. Remove orphaned vectors (in Pinecone but not in S3)
+    orphaned_doc_ids = pinecone_doc_ids - set(s3_docs.keys())
+    if debug:
+        debug_logs.append(f"Found {len(orphaned_doc_ids)} orphaned doc_ids to delete.")
+
     for doc_id in orphaned_doc_ids:
         try:
             await asyncio.to_thread(_delete_key_from_pinecone, doc_id)
             deleted += 1
         except Exception as e:
-            errors.append(f"Error deleting orphaned {doc_id}: {str(e)}")
+            error_msg = f"Error deleting orphaned {doc_id}: {str(e)}"
+            errors.append(error_msg)
+            if debug:
+                debug_logs.append(error_msg)
+
+    # 4. Final summary
+    if debug:
+        final_doc_ids, _, _ = await asyncio.to_thread(
+            pinecone_service.compute_index_snapshot
+        )
+        debug_logs.append(f"Final Pinecone doc_id count: {len(final_doc_ids)}")
 
     return {
-        "total_s3_documents": len(s3_keys),
+        "total_s3_documents": len(s3_docs),
         "total_pinecone_documents": len(pinecone_doc_ids),
         "synced": synced,
         "added": added,
         "updated": updated,
         "deleted": deleted,
         "errors": errors,
+        "debug": debug_logs if debug else None,
     }

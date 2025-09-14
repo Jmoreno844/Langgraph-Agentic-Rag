@@ -40,6 +40,10 @@ def _extract_tool_context_list(messages: Iterable[Any]) -> List[str]:
     return contexts
 
 
+# Backwards-compat alias for older imports
+_extract_tool_context = _extract_tool_context_list
+
+
 def extract_context(state: CustomMessagesState) -> CustomMessagesState:
     """Extract question and retrieved context from messages and store in state."""
     messages = state["messages"]

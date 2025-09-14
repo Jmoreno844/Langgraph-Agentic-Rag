@@ -142,8 +142,9 @@ async def debug_sync():
             stats = index.describe_index_stats()
             total_vectors = stats.get("total_vector_count", 0)
 
-            # Try to list some vectors
-            vector_list = list(index.list(namespace="", limit=3))
+            # Try to list some vectors - use the same namespace as the service
+            resolved_namespace = pinecone_service._resolve_namespace(None)
+            vector_list = list(index.list(namespace=resolved_namespace, limit=3))
             sample_vectors = []
             for v in vector_list[:3]:
                 vid = v.get("id") if isinstance(v, dict) else str(v)
@@ -179,7 +180,12 @@ async def debug_sync():
     summary="Synchronize S3 documents with Pinecone vectorstore",
     tags=["documents"],
 )
-async def sync_documents():
+async def sync_documents(
+    debug: bool = Query(
+        False,
+        description="If true, include verbose debugging info about the sync process",
+    ),
+):
     """Synchronize all S3 documents with the Pinecone vectorstore.
 
     This endpoint compares S3 documents with Pinecone vectors and performs the following operations:
@@ -190,7 +196,7 @@ async def sync_documents():
 
     Returns statistics about the sync operation including counts of synced, added, updated, and deleted documents.
     """
-    result = await svc_sync_documents()
+    result = await svc_sync_documents(debug=debug)
     return SyncResult(**result)
 
 

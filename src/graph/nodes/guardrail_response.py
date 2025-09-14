@@ -1,13 +1,11 @@
-from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage
-from src.graph.state import CustomMessagesState
-from src.graph.guardrails.topic_restriction import ALLOWED_TOPICS
 
-response_model = init_chat_model(
-    "openai:gpt-4o-mini",
-    streaming=True,
-    temperature=0,
-)
+# Stub response model
+class StubResponseModel:
+    async def ainvoke(self, messages):
+        return AIMessage(content="This is a stub response. Please configure a proper LLM model.")
+
+response_model = StubResponseModel()
 
 PROMPT_TEMPLATE = (
     "The user's request is out of scope for this assistant.\n"
@@ -19,14 +17,13 @@ PROMPT_TEMPLATE = (
     "- Optionally suggests a few example questions from the allowed topics."
 )
 
-
-async def guardrail_response(state: CustomMessagesState) -> CustomMessagesState:
+async def guardrail_response(state):
     if not state.get("messages"):
         return {}
     user_text = state["messages"][-1].content
     prompt = PROMPT_TEMPLATE.format(
-        allowed_topics=", ".join(ALLOWED_TOPICS),
+        allowed_topics="PC parts, peripherals, build services",
         user_message=user_text,
     )
     ai = await response_model.ainvoke([{"role": "user", "content": prompt}])
-    return {"messages": [AIMessage(content=ai.content)]}
+    return {"messages": [ai]}

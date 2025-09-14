@@ -84,7 +84,7 @@ async def build_app_async():
                 if hasattr(_async_checkpointer, "asetup"):
                     await _async_checkpointer.asetup()
                 else:
-                    _async_checkpointer.setup()
+                    await _async_checkpointer.setup()  # type: ignore
                 print("✅ Database tables created/verified (async)")
             except Exception as setup_error:
                 print(f"⚠️  Setup warning: {setup_error}")
