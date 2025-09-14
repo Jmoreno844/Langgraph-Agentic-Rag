@@ -1,56 +1,36 @@
 # src/api/main.py
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from src.graph.runtime import build_app, cleanup
+from src.graph.runtime import build_app, cleanup, build_app_async, acleanup
 from src.app.features.documents.api import router as documents_router
 from src.app.features.products.api import router as products_router
 from src.app.core.guardrails_setup import initialize_guardrails
-
-
-class ChatRequest(BaseModel):
-    session_id: str
-    messages: list  # [{role, content}]
+from src.app.features.chat.api import router as chat_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await initialize_guardrails()
 
-    app.state.graph_app = build_app()
+    # Prefer async builder (AsyncPostgresSaver) with fallback to sync
+    app.state.graph_app = await build_app_async()
     yield
     # Clean up database connection on shutdown
+    await acleanup()
     cleanup()
 
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(documents_router)
 app.include_router(products_router)
+app.include_router(chat_router)
 
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-
-
-@app.post("/chat")
-async def chat(body: ChatRequest):
-    payload = {
-        "messages": body.messages[-1:],
-        "has_been_rewritten": False,
-    }
-    config = {"configurable": {"thread_id": body.session_id}}
-
-    def gen():
-        # initial comment to establish SSE
-        yield "event: start\n\n"
-        for chunk in app.state.graph_app.stream(payload, config=config):
-            yield f"data: {str(chunk)}\n\n"
-        # explicit end event
-        yield "event: end\n\n"
-
-    return StreamingResponse(gen(), media_type="text/event-stream")
 
 
 class ErrorResponse(Exception):

@@ -1,90 +1,64 @@
 # Testing guidelines
 
-This test suite uses pytest and focuses on fast, deterministic unit tests. External services (LLMs, vector DBs, network I/O) are mocked.
+This project uses two distinct testing strategies: fast, isolated **unit tests** with `pytest` and comprehensive **RAG evaluation** with `DeepEval`.
 
-## How to run
+## Unit Testing (`pytest`)
+
+Unit tests focus on fast, deterministic checks of individual components (nodes, routers, etc.). External services like LLMs, databases, and network I/O are mocked to ensure tests are hermetic and quick to run.
+
+### How to run
 
 ```bash
 pytest -q
 ```
 
-## Principles
+### Principles
 
-- Keep tests deterministic: mock network, LLMs, and time-dependent behaviors
-- Test behavior over implementation details: assert inputs/outputs and routing decisions
-- Prefer fixtures for shared setup; avoid global state
-- Small, focused tests over large, brittle ones
-- Use monkeypatch to replace external dependencies
+- **Deterministic**: Mock network, LLMs, and time-dependent behaviors.
+- **Behavior-driven**: Test inputs/outputs and routing decisions, not implementation details.
+- **Focused**: Prefer small, targeted tests over large, brittle ones.
+- **No external dependencies**: Do not rely on real API keys or databases. Use fakes, mocks, and in-memory stand-ins (`MemorySaver`).
 
-## Structure
+## RAG Evaluation (`DeepEval`)
 
-- `tests/graph/routing/`: routers and conditional edges
-- `tests/graph/nodes/`: node-level behavior
-- `tests/graph/vectorstores/`: retrievers and tools
+RAG evaluation focuses on the quality and performance of the entire system. It uses a synthetic dataset to measure the RAG Triad (Faithfulness, Answer Relevancy, Contextual Recall) and other key metrics.
 
-## Environment
-
-- Do not rely on real API keys for tests. LLM calls must be monkeypatched to fake models
-- Avoid real databases. Use in-memory or mock checkpointers for integration tests
-
-## Adding new tests
-
-- Name tests descriptively: `test_<unit>_<expected_behavior>()`
-- Assert both the outcome and key side effects (e.g., messages appended, flags set)
-- When mocking models, capture prompts to validate prompt engineering
+- **For detailed setup, execution, and troubleshooting, see `evals/README.md`**.
 
 ## Test modules and purpose
 
-- **tests/conftest.py**
+- **`tests/conftest.py`**
 
-  - Purpose:
-    - Ensure repository root is importable via `sys.path` so `import src.*` works in tests.
-    - Set safe default environment variables for hermetic test runs without real API keys.
+  - **Purpose**: Ensures the `src` directory is importable in tests and sets safe default environment variables to prevent accidental calls to real services.
 
-- **tests/graph/nodes/test_generate_answer.py**
+- **`tests/graph/nodes/test_generate_answer.py`**
 
-  - Purpose:
-    - Validate prompt composition includes both the question (from `messages[-3]`) and retrieved context (from `messages[-1]`).
-    - Verify basic response shape returns an `AIMessage` object.
-    - Test error handling when state has insufficient messages (underspecified state raises an exception).
+  - **Purpose**: Validates that the final answer generation prompt correctly includes both the user's question and the retrieved context, ensuring the model has the necessary information to form a grounded answer.
 
-- **tests/graph/nodes/test_generate_answer_or_rag.py**
+- **`tests/graph/nodes/test_generate_answer_or_rag.py`**
 
-  - Purpose:
-    - `'Not rewritten'` path: inject a `SystemMessage` when `has_been_rewritten` is `False`, bind the retriever tool, and keep the flag as `False`.
-    - `'Already rewritten'` path: do not inject `SystemMessage` when `has_been_rewritten` is `True`, preserve the flag, and pass through tool-call responses correctly.
-    - Verify tools are bound for potential routing decisions in both scenarios.
+  - **Purpose**: Verifies the initial routing logic.
+    - **`'Not rewritten'` path**: Confirms that for a new user query, a `SystemMessage` is injected to guide the LLM, tools are bound, and the `has_been_rewritten` flag is correctly maintained.
+    - **`'Already rewritten'` path**: Ensures that if the query has been rewritten, the `SystemMessage` is skipped, preserving the conversation's integrity.
 
-- **tests/graph/nodes/test_rewrite_question.py**
+- **`tests/graph/nodes/test_rewrite_question.py`**
 
-  - Purpose:
-    - Verify the rewrite prompt is formed from the user's original question (extracted from `messages[-2]`).
-    - Ensure returned state contains a rewritten `AIMessage` and sets `has_been_rewritten=True`.
-    - Validate prompt content includes the original question text for LLM processing.
+  - **Purpose**: Checks that the query rewrite prompt is correctly formed from the original user question and that the output state properly includes the new `AIMessage` and sets `has_been_rewritten=True`.
 
-- **tests/graph/routing/test_document_grader.py**
+- **`tests/graph/routing/test_document_grader.py`**
 
-  - Purpose:
-    - `'Bypass when already rewritten'`: when `has_been_rewritten=True`, route directly to `generate_answer` without calling the grader model.
-    - `'Route on relevant'`: when grader returns "yes" score, route to `generate_answer`.
-    - `'Route on irrelevant'`: when grader returns "no" score, route to `rewrite_question`.
-    - Sanity-check that the grading prompt includes both question and context strings for proper evaluation.
+  - **Purpose**: Tests the conditional logic that decides whether retrieval is necessary.
+    - **`'Bypass when already rewritten'`**: Ensures the grader is skipped if the question was already improved.
+    - **`'Route on relevant'`**: Routes to answer generation if the context is deemed relevant.
+    - **`'Route on irrelevant'`**: Routes to query rewriting if the context is irrelevant.
 
-- **tests/graph/vectorstores/test_in_memory.py**
+- **`tests/graph/orchestration/test_graph.py`**
 
-  - Purpose:
-    - `'Error when no documents'`: raise a clear `ValueError` when document loader returns an empty list.
-    - `'Happy path with stubs'`: stub external dependencies (embeddings, vector store, reranker); create a retriever tool with expected name (`retrieve_rag_docs`) and description; verify retriever wiring returns documents via `invoke`.
-    - Keep tests hermetic by pre-stubbing import-time modules (`langchain_voyageai`, `local_loader_splitter`).
+  - **Purpose**: Provides end-to-end integration tests for the whole graph, using a `MemorySaver` checkpointer and mocked dependencies.
+    - **`'Direct answer path'`**: Verifies that a simple question flows through the graph and results in a direct `AIMessage` without tool calls.
+    - **`'RAG path'`**: Confirms that a question requiring retrieval correctly triggers the tool call → context extraction → final answer flow.
 
-- **tests/graph/orchestration/test_graph.py**
-
-  - Purpose:
-    - Compile the complete graph with `MemorySaver` checkpointer and faked LLM/retriever dependencies.
-    - `'Direct answer path'`: when LLM returns a plain response (no tool calls), verify final state produces an `AIMessage`.
-    - `'RAG path'`: when LLM requests tool usage (tool-call → retriever → `generate_answer`), verify the complete flow produces a final `AIMessage`.
-
-- **tests/api/test_app.py**
-  - Purpose:
-    - `'Root endpoint'`: verify `GET /` returns expected Hello World JSON payload with 200 status.
-    - `'Chat streaming contract'`: verify `POST /chat` streams Server-Sent Events with proper start/data/end event structure using a compiled in-memory graph (with fake LLM and stub retriever).
+- **`tests/api/test_app.py`**
+  - **Purpose**:
+    - **`'Root endpoint'`**: Verifies the `GET /` health check works as expected.
+    - **`'Chat streaming contract'`**: Ensures the `POST /chat` endpoint streams Server-Sent Events with the correct `start`, `data`, and `end` events, validating the API contract.
