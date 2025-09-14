@@ -37,7 +37,7 @@ from deepeval.metrics import (
     ContextualRelevancyMetric,
 )
 
-DATASET_PATH = Path("evals/synthetic_dataset.csv")
+DATASET_PATH = Path("tests/evals/data/synthetic_dataset.csv")
 MIN_SCORE_THRESHOLD = 0.5  # start lenient; tighten later
 
 
